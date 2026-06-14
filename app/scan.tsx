@@ -13,6 +13,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { workTypes } from '@/constants/workTypes';
 import { WorkTypePill } from '@/components/WorkTypePill';
 import { WeatherEvidenceCard } from '@/components/WeatherEvidenceCard';
+import { WebCameraView } from '@/components/WebCameraView';
 import { Palette } from '@/constants/colors';
 
 const WEB = Platform.OS === 'web';
@@ -126,7 +127,13 @@ export default function ScanScreen() {
       >
         <Text style={styles.step}>STEP 1 · CAPTURE WORKSITE</Text>
         <View style={styles.scanFrame}>
-          {localPhoto ? (
+          {cameraOpen && WEB ? (
+            <WebCameraView
+              onCapture={onCaptured}
+              onClose={() => setCameraOpen(false)}
+              accent={palette.primary}
+            />
+          ) : localPhoto ? (
             <Image source={{ uri: localPhoto }} style={styles.preview} resizeMode="cover" />
           ) : demoSite ? (
             <LinearGradient colors={['#2A1505', '#120A04']} style={styles.demoFill}>
@@ -140,11 +147,15 @@ export default function ScanScreen() {
               <Text style={styles.emptyText}>Point at the worksite or upload a photo</Text>
             </View>
           )}
-          <View style={[styles.corner, styles.cTL]} />
-          <View style={[styles.corner, styles.cTR]} />
-          <View style={[styles.corner, styles.cBL]} />
-          <View style={[styles.corner, styles.cBR]} />
-          {(localPhoto || demoSite) && (
+          {!cameraOpen && (
+            <>
+              <View style={[styles.corner, styles.cTL]} />
+              <View style={[styles.corner, styles.cTR]} />
+              <View style={[styles.corner, styles.cBL]} />
+              <View style={[styles.corner, styles.cBR]} />
+            </>
+          )}
+          {!cameraOpen && (localPhoto || demoSite) && (
             <TouchableOpacity style={styles.clearBtn} onPress={() => { setLocalPhoto(null); setDemoSite(false); }}>
               <Ionicons name="close" size={18} color="#fff" />
             </TouchableOpacity>
