@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fff7ed;
+  --foreground: #431407;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .glass {
+    @apply rounded-3xl border border-white/40 bg-white/40 shadow-glass backdrop-blur-xl;
+  }
+
+  .glass-soft {
+    @apply rounded-2xl border border-white/30 bg-white/30 backdrop-blur-md;
+  }
+
+  .section-label {
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-300/60 bg-white/50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 backdrop-blur;
+  }
+}
