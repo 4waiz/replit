@@ -83,12 +83,12 @@ export default function WakeScreen() {
             {weatherLoading ? (
               <>
                 <ActivityIndicator size="small" color={palette.amber} />
-                <Text style={styles.weatherText}>Reading site conditions…</Text>
+                <Text style={styles.weatherText} numberOfLines={1}>Reading site conditions…</Text>
               </>
             ) : (
               <>
                 <Ionicons name="thermometer" size={15} color={palette.amber} />
-                <Text style={styles.weatherText}>
+                <Text style={styles.weatherText} numberOfLines={1}>
                   {weather.locationName.split('·')[0].trim()} · {weather.tempC}°C · UV {weather.uvIndex}
                 </Text>
                 <View style={[styles.liveTag, { borderColor: weather.isLive ? `${palette.safe}55` : palette.border }]}>
@@ -98,6 +98,12 @@ export default function WakeScreen() {
                 </View>
               </>
             )}
+          </View>
+
+          {/* Groq pill */}
+          <View style={styles.groqPill}>
+            <Ionicons name="flash" size={12} color={palette.primary} />
+            <Text style={styles.groqPillText}>Groq being used for AI</Text>
           </View>
         </View>
 
@@ -169,7 +175,21 @@ const styles = StyleSheet.create({
     marginTop: 22,
     ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
   },
-  weatherText: { color: palette.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+  weatherText: { color: palette.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium', flexShrink: 1 },
+  groqPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,122,26,0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,122,26,0.30)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 100,
+    marginTop: 10,
+  },
+  groqPillText: { color: palette.primary, fontSize: 12, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
   liveTag: { borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginLeft: 2 },
   liveTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
 
