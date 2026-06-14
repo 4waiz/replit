@@ -33,22 +33,22 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     }
     body {
       height: 100%;
-      min-height: 100%;
       margin: 0;
       padding: 0;
       background-color: #0f0704;
       display: flex;
       justify-content: center;
       align-items: flex-start;
+      overflow: hidden;
     }
     #root {
       width: 100%;
       max-width: 390px;
-      min-height: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       position: relative;
-      overflow-x: hidden;
+      overflow: hidden;
       box-shadow: 0 0 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,122,26,0.08);
     }
   `;

@@ -144,7 +144,7 @@ function makeStyles(p: Palette) {
     container: {
       flex: 1,
       backgroundColor: p.bg,
-      ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }),
+      ...Platform.select({ web: { height: '100vh', overflow: 'hidden' } as any, default: {} }),
     },
     content: { flex: 1, paddingHorizontal: 20, justifyContent: 'space-between' },
 
