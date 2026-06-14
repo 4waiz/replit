@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Ym-R4iZpqckZO-3eJx-8j"
+uri = "file://assets/images/icon.png"
+type = "image"
+title = "starkz robot icon"
+
+[[generated]]
+id = "Rj7IDemiRSAGFtWBqlcdG"
+uri = "file://assets/images/splash-icon.png"
+type = "image"
+title = "starkz splash"

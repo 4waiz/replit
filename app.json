@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Starkz AI",
+    "slug": "starkz-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "starkzai",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1c0800"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.starkzai.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1c0800"
+      },
+      "package": "com.starkzai.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Starkz AI needs access to your photos to upload a worksite image.",
+          "cameraPermission": "Starkz AI needs your camera to capture the worksite."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
