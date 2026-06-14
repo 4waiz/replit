@@ -193,6 +193,6 @@ const styles = StyleSheet.create({
     }),
   },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
-  ctaText: { color: '#0A0A0A', fontSize: 16, fontWeight: '900', letterSpacing: 1.5, flex: 1, textAlign: 'center', fontFamily: 'Inter_700Bold' },
+  ctaText: { color: '#0A0A0A', fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
   hint: { color: palette.textFaint, fontSize: 12, textAlign: 'center', fontFamily: 'Inter_400Regular' },
 });
