@@ -23,8 +23,8 @@ export default function WakeScreen() {
   const { palette, bgGradient, theme, toggleTheme } = useTheme();
   const styles = makeStyles(palette);
 
-  const topPad = WEB ? 56 : insets.top;
-  const bottomPad = WEB ? 28 : insets.bottom;
+  const topPad = WEB ? 32 : insets.top;
+  const bottomPad = WEB ? 16 : insets.bottom;
 
   const float = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0.5)).current;
@@ -88,7 +88,7 @@ export default function WakeScreen() {
         {/* Hero */}
         <View style={styles.hero}>
           <Animated.View style={{ transform: [{ translateY }] }}>
-            <MascotAssistant size={172} />
+            <MascotAssistant size={130} />
           </Animated.View>
 
           <Text style={styles.title}>Starkz AI</Text>
@@ -146,16 +146,16 @@ function makeStyles(p: Palette) {
       backgroundColor: p.bg,
       ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }),
     },
-    content: { flex: 1, paddingHorizontal: 22, justifyContent: 'space-between' },
+    content: { flex: 1, paddingHorizontal: 20, justifyContent: 'space-between' },
 
-    blob: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.18 },
-    blobTop: { top: -120, right: -100, backgroundColor: p.primary },
-    blobBottom: { bottom: -100, left: -120, backgroundColor: p.critical, opacity: 0.12 },
+    blob: { position: 'absolute', width: 240, height: 240, borderRadius: 120, opacity: 0.16 },
+    blobTop: { top: -90, right: -80, backgroundColor: p.primary },
+    blobBottom: { bottom: -80, left: -90, backgroundColor: p.critical, opacity: 0.12 },
 
     topBar: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-    headerLogo: { width: 120, height: 44 },
+    headerLogo: { width: 100, height: 36 },
 
-    topRight: { alignItems: 'flex-end', gap: 8 },
+    topRight: { alignItems: 'flex-end', gap: 6 },
     onlinePill: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -163,16 +163,16 @@ function makeStyles(p: Palette) {
       backgroundColor: p.glass,
       borderWidth: 1,
       borderColor: p.border,
-      paddingHorizontal: 11,
-      paddingVertical: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
       borderRadius: 100,
     },
-    onlineDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: p.safe },
-    onlineText: { color: p.textMuted, fontSize: 11, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: p.safe },
+    onlineText: { color: p.textMuted, fontSize: 10.5, fontWeight: '600', fontFamily: 'Inter_500Medium' },
     themeBtn: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
+      width: 28,
+      height: 28,
+      borderRadius: 9,
       backgroundColor: p.glass,
       borderWidth: 1,
       borderColor: p.border,
@@ -181,58 +181,58 @@ function makeStyles(p: Palette) {
     },
 
     hero: { alignItems: 'center' },
-    title: { color: p.text, fontSize: 40, fontWeight: '900', letterSpacing: 1, marginTop: 6, fontFamily: 'Inter_700Bold' },
+    title: { color: p.text, fontSize: 32, fontWeight: '900', letterSpacing: 0.5, marginTop: 2, fontFamily: 'Inter_700Bold' },
     tagline: {
       color: p.textMuted,
-      fontSize: 14.5,
+      fontSize: 13,
       textAlign: 'center',
-      marginTop: 8,
-      lineHeight: 21,
-      maxWidth: 280,
+      marginTop: 4,
+      lineHeight: 19,
+      maxWidth: 260,
       fontFamily: 'Inter_400Regular',
     },
     weatherChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 7,
       backgroundColor: p.glass,
       borderWidth: 1,
       borderColor: p.border,
-      paddingHorizontal: 14,
-      paddingVertical: 9,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
       borderRadius: 100,
-      marginTop: 22,
+      marginTop: 14,
       ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
     },
-    weatherText: { color: p.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium', flexShrink: 1 },
+    weatherText: { color: p.text, fontSize: 12, fontWeight: '600', fontFamily: 'Inter_500Medium', flexShrink: 1 },
     groqPill: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 5,
       alignSelf: 'center',
       backgroundColor: `${p.primary}1A`,
       borderWidth: 1,
       borderColor: `${p.primary}44`,
-      paddingHorizontal: 14,
-      paddingVertical: 7,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
       borderRadius: 100,
-      marginTop: 10,
+      marginTop: 8,
     },
-    groqPillText: { color: p.primary, fontSize: 12, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-    liveTag: { borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginLeft: 2 },
+    groqPillText: { color: p.primary, fontSize: 11, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+    liveTag: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 2 },
     liveTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
 
-    footer: { gap: 12 },
+    footer: { gap: 8 },
     ctaWrap: {
-      borderRadius: 20,
+      borderRadius: 18,
       overflow: 'hidden',
       ...Platform.select({
-        web: { boxShadow: '0 12px 30px rgba(255,122,26,0.4)' } as any,
-        default: { shadowColor: p.primary, shadowOpacity: 0.45, shadowRadius: 22, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
+        web: { boxShadow: '0 10px 24px rgba(255,122,26,0.38)' } as any,
+        default: { shadowColor: p.primary, shadowOpacity: 0.45, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
       }),
     },
-    cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
-    ctaText: { color: '#0A0A0A', fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
-    hint: { color: p.textFaint, fontSize: 12, textAlign: 'center', fontFamily: 'Inter_400Regular' },
+    cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 15 },
+    ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.4, fontFamily: 'Inter_700Bold' },
+    hint: { color: p.textFaint, fontSize: 11, textAlign: 'center', fontFamily: 'Inter_400Regular' },
   });
 }
