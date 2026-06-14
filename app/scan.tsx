@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
-  View, Text, Image, ScrollView, TouchableOpacity,
-  StyleSheet, Platform, Alert,
+  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,310 +8,209 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { useColors } from '@/hooks/useColors';
+import { palette, bgGradient } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
-import { workTypes, getAnalysis } from '@/lib/mockData';
+import { workTypes } from '@/constants/workTypes';
 import { WorkTypePill } from '@/components/WorkTypePill';
-import { GlassCard } from '@/components/GlassCard';
+import { WeatherEvidenceCard } from '@/components/WeatherEvidenceCard';
 
-function hapticSuccess() {
-  if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-}
-function hapticSelection() {
-  if (Platform.OS !== 'web') Haptics.selectionAsync();
-}
-function hapticHeavy() {
-  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-}
+const WEB = Platform.OS === 'web';
+function hapticSuccess() { if (!WEB) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }
+function hapticSelect() { if (!WEB) Haptics.selectionAsync(); }
+function hapticHeavy() { if (!WEB) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); }
 
 export default function ScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = useColors();
-  const { setPhoto, setWorkTypeId, setResult, workTypeId, photo } = useApp();
+  const { setPhoto, setWorkTypeId, workTypeId, photo, weather } = useApp();
   const [localPhoto, setLocalPhoto] = useState<string | null>(photo);
+  const [demoSite, setDemoSite] = useState(false);
   const [localWorkType, setLocalWorkType] = useState<string | null>(workTypeId);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
-  const canAnalyze = !!localPhoto && !!localWorkType;
-
-  async function pickFromLibrary() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Allow photo access to upload a worksite photo.');
-      return;
-    }
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
-    if (!res.canceled && res.assets[0]) {
-      setLocalPhoto(res.assets[0].uri);
-      hapticSuccess();
-    }
-  }
+  const topPad = WEB ? 52 : insets.top;
+  const bottomPad = WEB ? 28 : insets.bottom;
+  const canAnalyze = !!localWorkType && (!!localPhoto || demoSite);
 
   async function pickFromCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Allow camera access to capture the worksite.');
+      Alert.alert('Camera needed', 'Allow camera access to capture the worksite.');
       return;
     }
-    const res = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [4, 3],
-    });
-    if (!res.canceled && res.assets[0]) {
-      setLocalPhoto(res.assets[0].uri);
-      hapticSuccess();
+    const res = await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] });
+    if (!res.canceled && res.assets[0]) { setLocalPhoto(res.assets[0].uri); setDemoSite(false); hapticSuccess(); }
+  }
+
+  async function pickFromLibrary() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Photos needed', 'Allow photo access to upload a worksite photo.');
+      return;
     }
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [4, 3] });
+    if (!res.canceled && res.assets[0]) { setLocalPhoto(res.assets[0].uri); setDemoSite(false); hapticSuccess(); }
   }
 
-  function selectWorkType(id: string) {
-    setLocalWorkType(id);
-    hapticSelection();
+  function useDemoSite() {
+    setDemoSite(true);
+    setLocalPhoto(null);
+    hapticSuccess();
   }
 
-  function handleAnalyze() {
+  function selectWorkType(id: string) { setLocalWorkType(id); hapticSelect(); }
+
+  function runAnalysis() {
     if (!canAnalyze || !localWorkType) return;
     hapticHeavy();
     setPhoto(localPhoto);
     setWorkTypeId(localWorkType);
-    setResult(getAnalysis(localWorkType));
     router.push('/loading');
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
+      <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
+
       {/* Header */}
-      <LinearGradient
-        colors={['#1c0800', '#431407']}
-        style={[styles.header, { paddingTop: topPad + 8 }]}
-      >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+      <View style={[styles.header, { paddingTop: topPad + 6 }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
+          <Ionicons name="arrow-back" size={20} color={palette.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>SCAN WORKSITE</Text>
+        <Text style={styles.headerTitle}>SITE SCAN</Text>
         <View style={{ width: 38 }} />
-      </LinearGradient>
+      </View>
 
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 100 }]}
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 110 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Step 1: Photo */}
-        <Text style={[styles.stepLabel, { color: colors.mutedForeground }]}>STEP 1 · WORKSITE PHOTO</Text>
-
-        {localPhoto ? (
-          <View style={styles.previewWrap}>
+        {/* Scan frame */}
+        <Text style={styles.step}>STEP 1 · CAPTURE WORKSITE</Text>
+        <View style={styles.scanFrame}>
+          {localPhoto ? (
             <Image source={{ uri: localPhoto }} style={styles.preview} resizeMode="cover" />
-            <TouchableOpacity
-              style={styles.clearBtn}
-              onPress={() => setLocalPhoto(null)}
-            >
-              <Ionicons name="close-circle" size={28} color="#fff" />
+          ) : demoSite ? (
+            <LinearGradient colors={['#2A1505', '#120A04']} style={styles.demoFill}>
+              <Ionicons name="business" size={42} color={palette.primary} />
+              <Text style={styles.demoLabel}>Abu Dhabi Demo Site</Text>
+              <Text style={styles.demoSub}>Construction zone · open exposure</Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.emptyFill}>
+              <Ionicons name="scan-outline" size={40} color={palette.textFaint} />
+              <Text style={styles.emptyText}>Point at the worksite or upload a photo</Text>
+            </View>
+          )}
+          {/* AR corner brackets */}
+          <View style={[styles.corner, styles.cTL]} />
+          <View style={[styles.corner, styles.cTR]} />
+          <View style={[styles.corner, styles.cBL]} />
+          <View style={[styles.corner, styles.cBR]} />
+          {(localPhoto || demoSite) && (
+            <TouchableOpacity style={styles.clearBtn} onPress={() => { setLocalPhoto(null); setDemoSite(false); }}>
+              <Ionicons name="close" size={18} color="#fff" />
             </TouchableOpacity>
-          </View>
-        ) : (
-          <GlassCard style={styles.uploadCard}>
-            <View style={[styles.uploadZone, { borderColor: colors.cardBorder }]}>
-              <View style={[styles.cameraCircle, { backgroundColor: colors.muted }]}>
-                <Ionicons name="camera" size={28} color={colors.primary} />
-              </View>
-              <Text style={[styles.uploadTitle, { color: colors.foreground }]}>
-                Capture or upload worksite photo
-              </Text>
-              <Text style={[styles.uploadSub, { color: colors.mutedForeground }]}>
-                JPG, PNG, WEBP · Max 25MB
-              </Text>
-            </View>
-            <View style={styles.uploadBtns}>
-              <TouchableOpacity
-                style={[styles.uploadBtn, { backgroundColor: colors.primary }]}
-                onPress={pickFromCamera}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="camera" size={18} color="#fff" />
-                <Text style={styles.uploadBtnText}>Take Photo</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.uploadBtnSecondary, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}
-                onPress={pickFromLibrary}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="images" size={18} color={colors.primary} />
-                <Text style={[styles.uploadBtnTextSecondary, { color: colors.foreground }]}>Library</Text>
-              </TouchableOpacity>
-            </View>
-          </GlassCard>
-        )}
+          )}
+        </View>
 
-        {/* Step 2: Work Type */}
-        <Text style={[styles.stepLabel, { color: colors.mutedForeground, marginTop: 28 }]}>
-          STEP 2 · SELECT WORK TYPE
-        </Text>
-        <View style={styles.pillGrid}>
+        {/* Capture buttons */}
+        <View style={styles.captureRow}>
+          <TouchableOpacity style={styles.captureBtn} onPress={pickFromCamera} activeOpacity={0.85}>
+            <Ionicons name="camera" size={18} color={palette.primary} />
+            <Text style={styles.captureText}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.captureBtn} onPress={pickFromLibrary} activeOpacity={0.85}>
+            <Ionicons name="images" size={18} color={palette.primary} />
+            <Text style={styles.captureText}>Upload</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={[styles.demoBtn, demoSite && styles.demoBtnActive]} onPress={useDemoSite} activeOpacity={0.85}>
+          <Ionicons name="flash" size={16} color={demoSite ? '#0A0A0A' : palette.amber} />
+          <Text style={[styles.demoBtnText, demoSite && styles.demoBtnTextActive]}>Use Demo Site</Text>
+        </TouchableOpacity>
+
+        {/* Work type */}
+        <Text style={[styles.step, { marginTop: 26 }]}>STEP 2 · WORK TYPE</Text>
+        <View style={styles.grid}>
           {workTypes.map((wt) => (
-            <WorkTypePill
-              key={wt.id}
-              item={wt}
-              selected={localWorkType === wt.id}
-              onPress={() => selectWorkType(wt.id)}
-            />
+            <WorkTypePill key={wt.id} item={wt} selected={localWorkType === wt.id} onPress={() => selectWorkType(wt.id)} />
           ))}
         </View>
+
+        {/* Weather */}
+        <Text style={[styles.step, { marginTop: 26 }]}>STEP 3 · SITE CONDITIONS</Text>
+        <WeatherEvidenceCard weather={weather} />
       </ScrollView>
 
-      {/* Sticky Analyze Button */}
-      <View style={[styles.stickyFooter, { paddingBottom: bottomPad + 16, backgroundColor: colors.background }]}>
-        <TouchableOpacity
-          onPress={handleAnalyze}
-          disabled={!canAnalyze}
-          activeOpacity={0.85}
-          style={[styles.analyzeWrap, !canAnalyze && styles.disabledWrap]}
-        >
-          <LinearGradient
-            colors={canAnalyze ? ['#f97316', '#ea580c'] : ['#d1d5db', '#9ca3af']}
-            style={styles.analyzeBtn}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Ionicons name="flash" size={20} color="#fff" />
-            <Text style={styles.analyzeBtnText}>ANALYZE RISK</Text>
+      {/* Sticky CTA */}
+      <View style={[styles.footer, { paddingBottom: bottomPad + 14 }]}>
+        <TouchableOpacity onPress={runAnalysis} disabled={!canAnalyze} activeOpacity={0.9} style={[styles.ctaWrap, !canAnalyze && { opacity: 0.45 }]}>
+          <LinearGradient colors={[palette.amber, palette.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
+            <Ionicons name="pulse" size={20} color="#0A0A0A" />
+            <Text style={styles.ctaText}>RUN SAFETY ANALYSIS</Text>
           </LinearGradient>
         </TouchableOpacity>
-        {!canAnalyze && (
-          <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            Add a photo and select work type to continue
-          </Text>
-        )}
+        {!canAnalyze && <Text style={styles.hint}>Add a photo (or demo site) and pick a work type</Text>}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+  iconBtn: {
+    width: 38, height: 38, borderRadius: 12, backgroundColor: palette.glass,
+    borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center',
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 2,
-    fontFamily: 'Inter_700Bold',
-  },
+  headerTitle: { color: palette.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+  content: { paddingHorizontal: 20, paddingTop: 6 },
+  step: { color: palette.textFaint, fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginBottom: 12, fontFamily: 'Inter_600SemiBold' },
 
-  scroll: { flex: 1 },
-  content: { padding: 20 },
-
-  stepLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 12,
-    fontFamily: 'Inter_600SemiBold',
+  scanFrame: {
+    height: 210, borderRadius: 22, overflow: 'hidden', position: 'relative',
+    backgroundColor: palette.bgRaised, borderWidth: 1, borderColor: palette.border,
   },
-
-  uploadCard: { overflow: 'hidden' },
-  uploadZone: {
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderRadius: 16,
-    alignItems: 'center',
-    padding: 28,
-    gap: 10,
-    marginBottom: 16,
-  },
-  cameraCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  uploadTitle: { fontSize: 15, fontWeight: '600', textAlign: 'center', fontFamily: 'Inter_600SemiBold' },
-  uploadSub: { fontSize: 12, textAlign: 'center', fontFamily: 'Inter_400Regular' },
-  uploadBtns: { flexDirection: 'row', gap: 10 },
-  uploadBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 13,
-    borderRadius: 14,
-  },
-  uploadBtnText: { color: '#fff', fontWeight: '700', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
-  uploadBtnSecondary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 13,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  uploadBtnTextSecondary: { fontWeight: '700', fontSize: 14, fontFamily: 'Inter_600SemiBold' },
-
-  previewWrap: { borderRadius: 20, overflow: 'hidden', position: 'relative', marginBottom: 4 },
-  preview: { width: '100%', height: 220, borderRadius: 20 },
+  preview: { width: '100%', height: '100%' },
+  demoFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  demoLabel: { color: palette.text, fontSize: 16, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+  demoSub: { color: palette.textMuted, fontSize: 12, fontFamily: 'Inter_400Regular' },
+  emptyFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 30 },
+  emptyText: { color: palette.textFaint, fontSize: 13, textAlign: 'center', fontFamily: 'Inter_400Regular' },
+  corner: { position: 'absolute', width: 24, height: 24, borderColor: palette.primary },
+  cTL: { top: 12, left: 12, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
+  cTR: { top: 12, right: 12, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
+  cBL: { bottom: 12, left: 12, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 8 },
+  cBR: { bottom: 12, right: 12, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
   clearBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 14,
+    position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
   },
 
-  pillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  captureRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  captureBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: palette.glass, borderWidth: 1, borderColor: palette.border, borderRadius: 14, paddingVertical: 13,
+  },
+  captureText: { color: palette.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+  demoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10,
+    borderWidth: 1, borderColor: `${palette.amber}55`, backgroundColor: 'rgba(255,176,32,0.08)', borderRadius: 14, paddingVertical: 13,
+  },
+  demoBtnActive: { backgroundColor: palette.amber, borderColor: palette.amber },
+  demoBtnText: { color: palette.amber, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+  demoBtnTextActive: { color: '#0A0A0A' },
 
-  stickyFooter: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(194,65,12,0.15)',
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
+
+  footer: {
+    position: Platform.OS === 'web' ? ('sticky' as any) : 'absolute',
+    left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12,
+    backgroundColor: 'rgba(7,7,7,0.92)', borderTopWidth: 1, borderTopColor: palette.border,
   },
-  analyzeWrap: { borderRadius: 18, overflow: 'hidden' },
-  disabledWrap: { opacity: 0.6 },
-  analyzeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 18,
-  },
-  analyzeBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 2,
-    fontFamily: 'Inter_700Bold',
-  },
-  hint: {
-    textAlign: 'center',
-    fontSize: 12,
-    marginTop: 8,
-    fontFamily: 'Inter_400Regular',
-  },
+  ctaWrap: { borderRadius: 18, overflow: 'hidden' },
+  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
+  ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
+  hint: { color: palette.textFaint, fontSize: 12, textAlign: 'center', marginTop: 8, fontFamily: 'Inter_400Regular' },
 });

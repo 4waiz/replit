@@ -1,7 +1,6 @@
-import { useColorScheme } from 'react-native';
-import { lightColors, darkColors, AppColors } from '@/constants/colors';
+import { darkColors, AppColors } from '@/constants/colors';
 
+// Starkz AI is a dark-only command-center app — always return the dark palette.
 export function useColors(): AppColors {
-  const scheme = useColorScheme();
-  return scheme === 'dark' ? darkColors : lightColors;
+  return darkColors;
 }

@@ -1,179 +1,130 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, Platform, Animated } from 'react-native';
+import { View, Text, StyleSheet, Platform, Animated, Easing, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { agents, loadingSteps } from '@/lib/mockData';
+import { palette, bgGradient } from '@/constants/colors';
+import { useApp } from '@/context/AppContext';
+import { runAnalysis, AnalysisResult } from '@/lib/agentEngine';
+import { MascotAssistant } from '@/components/MascotAssistant';
+import { AgentRunCard, AgentRunState } from '@/components/AgentRunCard';
 
-const STEP_DURATION = 600;
-const TOTAL_DURATION = loadingSteps.length * STEP_DURATION + 600;
-const nativeDriver = Platform.OS !== 'web';
+const WEB = Platform.OS === 'web';
+const REVEAL_MS = 750; // delay between each agent completing
 
-export default function LoadingScreen() {
+export default function AnalysisScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [activeStep, setActiveStep] = useState<number>(-1);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const { weather, workTypeId, photo, setResult } = useApp();
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
+  const topPad = WEB ? 56 : insets.top;
+  const bottomPad = WEB ? 28 : insets.bottom;
+
+  // -1 = nothing revealed yet; index = that agent is the latest completed.
+  const [completedUpTo, setCompletedUpTo] = useState(-1);
+  const resultRef = useRef<AnalysisResult | null>(null);
+  const ring = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.15, duration: 900, useNativeDriver: nativeDriver }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: nativeDriver }),
-      ])
-    ).start();
+    Animated.loop(Animated.timing(ring, { toValue: 1, duration: 2400, easing: Easing.linear, useNativeDriver: true })).start();
 
-    loadingSteps.forEach((_, i) => {
-      setTimeout(() => setActiveStep(i), i * STEP_DURATION + 400);
-    });
+    let cancelled = false;
 
-    const timer = setTimeout(() => router.replace('/result'), TOTAL_DURATION);
-    return () => clearTimeout(timer);
+    async function go() {
+      // Kick off the real analysis (Groq + engine) in parallel with the reveal.
+      const analysisPromise = runAnalysis(weather, workTypeId ?? 'construction', !!photo);
+
+      // Reveal agents one at a time for the cinematic feel.
+      for (let i = 0; i < 4; i++) {
+        await new Promise((r) => setTimeout(r, REVEAL_MS));
+        if (cancelled) return;
+        setCompletedUpTo(i);
+      }
+
+      const result = await analysisPromise;
+      if (cancelled) return;
+      resultRef.current = result;
+
+      // Hold a beat on the last agent, then go to the dashboard.
+      await new Promise((r) => setTimeout(r, 500));
+      if (cancelled) return;
+      setResult(result);
+      router.replace('/result');
+    }
+
+    go();
+    return () => { cancelled = true; };
   }, []);
+
+  const spin = ring.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+
+  // Placeholder agent shells (names shown before Groq text lands isn't needed —
+  // we reveal full cards as each completes, using deterministic-or-Groq text).
+  const previewAgents = resultRef.current?.agents ?? PLACEHOLDER_AGENTS;
+
+  function stateFor(i: number): AgentRunState {
+    if (i <= completedUpTo) return 'complete';
+    if (i === completedUpTo + 1) return 'scanning';
+    return 'idle';
+  }
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#0f0300', '#1c0800', '#431407']}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-      />
+      <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
+      <View style={[styles.blob, styles.blobTop]} />
 
-      <View style={[styles.content, { paddingTop: topPad + 40, paddingBottom: bottomPad + 40 }]}>
-        <View style={styles.mascotWrap}>
-          <Animated.View style={[styles.glowOuter, { transform: [{ scale: pulseAnim }] }]} />
-          <View style={styles.glowInner} />
-          <Image
-            source={require('../assets/images/robot.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: topPad + 20, paddingBottom: bottomPad + 30 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Mascot + scanning ring */}
+        <View style={styles.heroWrap}>
+          <Animated.View style={[styles.scanRing, { transform: [{ rotate: spin }] }]} />
+          <MascotAssistant size={120} glow />
         </View>
+        <Text style={styles.title}>Starkz AI is analyzing the site</Text>
+        <Text style={styles.subtitle}>
+          {completedUpTo < 3 ? 'Agents reasoning over live conditions…' : 'Compiling safety decision…'}
+        </Text>
 
-        <Text style={styles.title}>Analyzing Worksite</Text>
-        <Text style={styles.subtitle}>Starkz agents are on the job</Text>
-
-        <View style={styles.steps}>
-          {loadingSteps.map((step, i) => {
-            const done = i < activeStep;
-            const active = i === activeStep;
-            return (
-              <View key={step} style={styles.step}>
-                <View style={[
-                  styles.stepIcon,
-                  done && styles.stepIconDone,
-                  active && styles.stepIconActive,
-                ]}>
-                  {done ? (
-                    <Ionicons name="checkmark" size={13} color="#fff" />
-                  ) : (
-                    <View style={[styles.stepDot, active && styles.stepDotActive]} />
-                  )}
-                </View>
-                <Text style={[styles.stepText, (done || active) && styles.stepTextActive]}>
-                  {step}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-
-        <View style={styles.agentRow}>
-          {agents.map((agent) => (
-            <View key={agent.id} style={styles.agentPill}>
-              <Ionicons name={agent.iconName as any} size={14} color="#fb923c" />
-              <Text style={styles.agentName}>{agent.name}</Text>
-            </View>
+        {/* Agent pipeline */}
+        <View style={styles.agents}>
+          {previewAgents.map((agent, i) => (
+            <AgentRunCard key={agent.id} agent={agent} state={stateFor(i)} />
           ))}
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
+// Shown until the real (Groq or deterministic) result resolves; the cards only
+// expand their reasoning once `state === 'complete'`, by which point the real
+// result has typically landed.
+const PLACEHOLDER_AGENTS = [
+  { id: 'weather' as const, name: 'Weather Risk Agent', icon: 'thermometer', evidence: '', decision: '', confidence: 90 },
+  { id: 'workload' as const, name: 'Workload Agent', icon: 'barbell', evidence: '', decision: '', confidence: 86 },
+  { id: 'schedule' as const, name: 'Schedule Agent', icon: 'time', evidence: '', decision: '', confidence: 90 },
+  { id: 'comms' as const, name: 'Communication Agent', icon: 'chatbubbles', evidence: '', decision: '', confidence: 95 },
+];
+
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  mascotWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
-    width: 180,
-    height: 180,
-  },
-  glowOuter: {
+  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+  blob: { position: 'absolute', width: 300, height: 300, borderRadius: 150, opacity: 0.16 },
+  blobTop: { top: -120, alignSelf: 'center', backgroundColor: palette.primary },
+  content: { paddingHorizontal: 22, alignItems: 'stretch' },
+  heroWrap: { alignItems: 'center', justifyContent: 'center', height: 150, alignSelf: 'center' },
+  scanRing: {
     position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: 'rgba(249,115,22,0.18)',
+    width: 138,
+    height: 138,
+    borderRadius: 69,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    borderTopColor: palette.primary,
+    borderRightColor: palette.amber,
   },
-  glowInner: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(249,115,22,0.28)',
-  },
-  mascot: { width: 130, height: 150, zIndex: 1 },
-  title: {
-    color: '#fff',
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    fontFamily: 'Inter_700Bold',
-  },
-  subtitle: {
-    color: 'rgba(253,186,116,0.7)',
-    fontSize: 14,
-    marginBottom: 40,
-    fontFamily: 'Inter_400Regular',
-  },
-  steps: { alignSelf: 'stretch', gap: 14, marginBottom: 36 },
-  step: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepIconDone: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-  stepIconActive: { borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.2)' },
-  stepDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  stepDotActive: { backgroundColor: '#f97316' },
-  stepText: { color: 'rgba(255,255,255,0.35)', fontSize: 13, fontFamily: 'Inter_400Regular' },
-  stepTextActive: { color: 'rgba(255,255,255,0.9)', fontFamily: 'Inter_500Medium' },
-  agentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-  agentPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(249,115,22,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(249,115,22,0.25)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 100,
-  },
-  agentName: { color: '#fb923c', fontSize: 11, fontWeight: '600', fontFamily: 'Inter_600SemiBold' },
+  title: { color: palette.text, fontSize: 21, fontWeight: '800', textAlign: 'center', marginTop: 8, fontFamily: 'Inter_700Bold' },
+  subtitle: { color: palette.textMuted, fontSize: 13.5, textAlign: 'center', marginTop: 6, marginBottom: 24, fontFamily: 'Inter_400Regular' },
+  agents: { alignSelf: 'stretch' },
 });
