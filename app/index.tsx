@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity, Animated, Easing, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, Animated, Easing, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -58,12 +58,11 @@ export default function WakeScreen() {
       <View style={[styles.content, { paddingTop: topPad + 16, paddingBottom: bottomPad + 18 }]}>
         {/* Top status bar */}
         <View style={styles.topBar}>
-          <View style={styles.brandRow}>
-            <View style={styles.logoDot}>
-              <Ionicons name="flame" size={15} color="#0A0A0A" />
-            </View>
-            <Text style={styles.brand}>STARKZ AI</Text>
-          </View>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
           <View style={styles.onlinePill}>
             <Animated.View style={[styles.onlineDot, { opacity: pulse }]} />
             <Text style={styles.onlineText}>Agent online</Text>
@@ -131,16 +130,7 @@ const styles = StyleSheet.create({
   blobBottom: { bottom: -100, left: -120, backgroundColor: palette.critical, opacity: 0.12 },
 
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  logoDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
-    backgroundColor: palette.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brand: { color: palette.text, fontSize: 15, fontWeight: '900', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+  headerLogo: { width: 120, height: 44 },
   onlinePill: {
     flexDirection: 'row',
     alignItems: 'center',
