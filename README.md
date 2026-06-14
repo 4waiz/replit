@@ -1,89 +1,79 @@
-# 🤖 Starkz AI — Heat Safety Agent
+# 🔥 Starkz AI — Field Heat-Safety Agent
 
-**Your AI safety agent for extreme heat worksites.**
-One phone scan → instant heat & fatigue risk dashboard → a clear safety action plan and multilingual worker alert.
+**A premium mobile AI safety agent for outdoor workers in extreme heat.**
+One scan → real risk intelligence → action plan.
 
----
-
-## 🏆 Hackathon pitch
-
-In the UAE and across the Gulf, outdoor workers — on construction sites, delivery routes, landscaping crews, security posts — face **extreme heat that regularly exceeds 45–50°C**. Heat stress is a leading, *preventable* cause of worksite injury, yet supervisors rarely have a fast, objective way to judge risk and act.
-
-**Starkz AI turns one phone photo into an instant safety decision.**
-A supervisor scans the worksite, picks the work type, and in ~3 seconds gets:
-
-- a **Critical / High risk score** with heat-exposure and fatigue breakdown,
-- a **supervisor action** and **task adjustment** plan,
-- a **break & rotation schedule**, and
-- a **multilingual worker alert** (English, Arabic, Hindi, Urdu) ready to send.
-
-> One simple trigger → one beautiful, immediate, actionable result.
-
-It's designed as a **mobile-first AI companion app** — warm, friendly, and serious about worker safety.
+A supervisor opens the app, scans or uploads a worksite photo, picks the work
+type, and Starkz AI generates a **real** heat-safety decision from live weather +
+work-type risk: a 0–100 risk score, sub-scores, a break schedule, a supervisor
+action, a multilingual worker alert and a shareable safety report.
 
 ---
 
-## 📱 Demo flow (works fully offline — no internet, no API keys)
+## ⚙️ Tech stack
 
-1. Open the app — meet the **Starkz** robot.
-2. Tap **Scan Worksite**.
-3. Tap **Use Demo Site** (guaranteed to work live — no camera needed).
-4. Select a work type, e.g. **Construction**.
-5. Tap **Analyze Risk**.
-6. Watch the **3 agents** work through a short cinematic loading sequence.
-7. See the **Critical risk dashboard** (87/100 gauge, metrics, actions).
-8. Scroll to the **multilingual worker alert**.
-9. Share the **Shareable Safety Report** card.
-10. Open **`/video`** for an auto-playing promo you can screen-record.
+- **Expo SDK 52** · **Expo Router** · **React Native 0.76** · **TypeScript** (strict)
+- **Open-Meteo** for live weather (no API key required)
+- **Groq** (`llama-3.3-70b-versatile`) for live agent reasoning + multilingual alerts
+- Dark command-center UI — graphite black, heat-orange/amber gradients, glassmorphism
 
-The work type changes the analysis slightly (e.g. Construction → heavy-labor risk, Delivery → route fatigue, Security → long standing periods, Maintenance → reflective/hot surfaces).
+This is an **Expo mobile app** (runs on Android + web). It is no longer a Next.js project.
 
 ---
 
-## 🛰️ What the three AI agents do
+## 🧠 Real intelligence (not a mock)
 
-| Agent | Role |
-| --- | --- |
-| **Safety Agent** | Detects immediate heat and site hazards |
-| **Schedule Agent** | Adjusts breaks, rotations, and heavy tasks |
-| **Worker Communication Agent** | Creates multilingual safety alerts |
+| Layer | File | What it does |
+| --- | --- | --- |
+| Weather | `lib/weatherService.ts` | Live Open-Meteo fetch for the Abu Dhabi worksite; falls back to realistic UAE demo conditions (43°C / UV 10) if offline |
+| Scoring | `lib/heatRiskEngine.ts` | Real 0–100 risk score: temperature + UV + humidity heat-index + wind relief + midday boost × work-type weight |
+| Agents | `lib/agentEngine.ts` | Orchestrates 4 agents (Weather Risk, Workload, Schedule, Communication), each with evidence, a decision and a confidence score |
+| Reasoning | `lib/groqService.ts` | Groq turns the numbers into natural reasoning + EN/AR/HI/UR worker alerts |
 
-In this prototype the agents run on **deterministic mock intelligence** — realistic, instant, and reliable for a live demo. The architecture is ready to swap in real analysis later.
+**Risk levels:** 0–39 Low · 40–64 Moderate · 65–84 High · 85–100 Critical.
+If Groq is unavailable (no key / rate-limited / offline) the app falls back to
+deterministic reasoning so the demo never breaks.
 
 ---
 
-## 🚀 Running locally / in Replit
+## 🚀 Running locally
 
 ```bash
 npm install
-npm run dev      # dev server on 0.0.0.0:5000
-npm run build    # production build
-npm run start    # serve production build on 0.0.0.0:5000
+
+# Optional but recommended — enables live Groq reasoning:
+cp .env.example .env          # then paste your key from https://console.groq.com/keys
+
+npm run web                   # web preview at http://localhost:5000
+npm run android               # Android emulator/device (needs one connected)
+npm start                     # same as web
 ```
 
-Open <http://localhost:5000>. The promo page is at <http://localhost:5000/video>.
-
-**Replit:** the "Start application" workflow runs `npm run dev`. The preview is a proxied iframe, so `next.config.mjs` allows the repl's dev origin via `allowedDevOrigins`.
+`EXPO_PUBLIC_GROQ_API_KEY` in `.env` powers the live agent reasoning. Without it
+the app still runs end-to-end with the deterministic engine.
 
 ---
 
-## 🎨 Design
+## 🎬 Hackathon demo flow
 
-- Mobile-first **phone shell**: full width on phones, a centered phone frame on desktop/projector.
-- Warm **orange glassmorphism** — peach/amber/orange + soft purple gradients, glowing blobs, translucent glass cards.
-- Friendly floating **robot mascot** with an orange glow.
-- Smooth CSS animations only — **no heavy dependencies** (no Framer Motion, no chart libs).
+1. Open Starkz AI — agent wakes up, shows **live** site temperature.
+2. Tap **Start Site Scan**.
+3. Tap **Use Demo Site** (guaranteed to work — no camera needed).
+4. Select **Construction**.
+5. Tap **Run Safety Analysis** — watch the 4 agents reason over real conditions.
+6. See the **risk gauge** + breakdown + supervisor action + break schedule.
+7. Open the **multilingual worker alert** (English · Arabic · Hindi · Urdu).
+8. View the **shareable safety report**.
 
-## 🧱 Tech stack
+---
 
-- **Next.js 14** (App Router) · **TypeScript** · **Tailwind CSS 3**
-- No backend, no API keys, no external AI service — fully self-contained.
+## 🗂️ Architecture
 
-## 🔭 Future real-world version
-
-- Wire a real `POST /api/analyze` route that sends the photo + work type to a vision-capable model (e.g. Claude) for genuine site-hazard detection.
-- Pull live weather/heat-index data for the site location.
-- Persist reports, push worker alerts via SMS/WhatsApp, and log compliance.
-- On-device inference for fully offline field use.
-
-The current UI already models this flow, so connecting real intelligence is a drop-in replacement for `getAnalysis()` in `lib/mockData.ts`.
+```
+app/            index (wake) · scan · loading (analysis) · result (dashboard) · alert · report
+lib/            weatherService · heatRiskEngine · agentEngine · groqService
+constants/      colors (palette) · workTypes (risk weights)
+components/      RiskGauge · AgentRunCard · WeatherEvidenceCard · WorkerAlertCard
+                SafetyReportCard · MascotAssistant · GlassPanel · MetricBar · WorkTypePill
+context/        AppContext (state + live weather)
+```

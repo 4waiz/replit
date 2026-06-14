@@ -43,6 +43,10 @@ export default function AnalysisScreen() {
 
       const result = await analysisPromise;
       if (cancelled) return;
+      // Stamp the generation time here (lib stays time-free for determinism).
+      result.generatedAtLabel = new Date().toLocaleString(undefined, {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
       resultRef.current = result;
 
       // Hold a beat on the last agent, then go to the dashboard.
