@@ -1,0 +1,1 @@
+- [Expo Replit Setup](expo-replit-setup.md) — Expo SDK 52 on Replit: port 5000 webview, npm start not npx expo, expose-asset must be installed separately.
