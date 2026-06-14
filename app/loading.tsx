@@ -8,6 +8,7 @@ import { agents, loadingSteps } from '@/lib/mockData';
 
 const STEP_DURATION = 600;
 const TOTAL_DURATION = loadingSteps.length * STEP_DURATION + 600;
+const nativeDriver = Platform.OS !== 'web';
 
 export default function LoadingScreen() {
   const router = useRouter();
@@ -19,20 +20,17 @@ export default function LoadingScreen() {
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
   useEffect(() => {
-    // Pulse the glow ring
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.15, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.15, duration: 900, useNativeDriver: nativeDriver }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: nativeDriver }),
       ])
     ).start();
 
-    // Step through loading items
     loadingSteps.forEach((_, i) => {
       setTimeout(() => setActiveStep(i), i * STEP_DURATION + 400);
     });
 
-    // Navigate to result
     const timer = setTimeout(() => router.replace('/result'), TOTAL_DURATION);
     return () => clearTimeout(timer);
   }, []);
@@ -47,7 +45,6 @@ export default function LoadingScreen() {
       />
 
       <View style={[styles.content, { paddingTop: topPad + 40, paddingBottom: bottomPad + 40 }]}>
-        {/* Mascot with pulse */}
         <View style={styles.mascotWrap}>
           <Animated.View style={[styles.glowOuter, { transform: [{ scale: pulseAnim }] }]} />
           <View style={styles.glowInner} />
@@ -61,7 +58,6 @@ export default function LoadingScreen() {
         <Text style={styles.title}>Analyzing Worksite</Text>
         <Text style={styles.subtitle}>Starkz agents are on the job</Text>
 
-        {/* Steps */}
         <View style={styles.steps}>
           {loadingSteps.map((step, i) => {
             const done = i < activeStep;
@@ -76,16 +72,10 @@ export default function LoadingScreen() {
                   {done ? (
                     <Ionicons name="checkmark" size={13} color="#fff" />
                   ) : (
-                    <View style={[
-                      styles.stepDot,
-                      active && styles.stepDotActive,
-                    ]} />
+                    <View style={[styles.stepDot, active && styles.stepDotActive]} />
                   )}
                 </View>
-                <Text style={[
-                  styles.stepText,
-                  (done || active) && styles.stepTextActive,
-                ]}>
+                <Text style={[styles.stepText, (done || active) && styles.stepTextActive]}>
                   {step}
                 </Text>
               </View>
@@ -93,7 +83,6 @@ export default function LoadingScreen() {
           })}
         </View>
 
-        {/* Agent pills */}
         <View style={styles.agentRow}>
           {agents.map((agent) => (
             <View key={agent.id} style={styles.agentPill}>
@@ -115,7 +104,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
-
   mascotWrap: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -138,7 +126,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(249,115,22,0.28)',
   },
   mascot: { width: 130, height: 150, zIndex: 1 },
-
   title: {
     color: '#fff',
     fontSize: 26,
@@ -153,7 +140,6 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     fontFamily: 'Inter_400Regular',
   },
-
   steps: { alignSelf: 'stretch', gap: 14, marginBottom: 36 },
   step: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepIcon: {
@@ -166,14 +152,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepIconDone: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
-  },
-  stepIconActive: {
-    borderColor: '#f97316',
-    backgroundColor: 'rgba(249,115,22,0.2)',
-  },
+  stepIconDone: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  stepIconActive: { borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.2)' },
   stepDot: {
     width: 7,
     height: 7,
@@ -181,22 +161,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
   },
   stepDotActive: { backgroundColor: '#f97316' },
-  stepText: {
-    color: 'rgba(255,255,255,0.35)',
-    fontSize: 13,
-    fontFamily: 'Inter_400Regular',
-  },
-  stepTextActive: {
-    color: 'rgba(255,255,255,0.9)',
-    fontFamily: 'Inter_500Medium',
-  },
-
-  agentRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    justifyContent: 'center',
-  },
+  stepText: { color: 'rgba(255,255,255,0.35)', fontSize: 13, fontFamily: 'Inter_400Regular' },
+  stepTextActive: { color: 'rgba(255,255,255,0.9)', fontFamily: 'Inter_500Medium' },
+  agentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   agentPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -208,10 +175,5 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 100,
   },
-  agentName: {
-    color: '#fb923c',
-    fontSize: 11,
-    fontWeight: '600',
-    fontFamily: 'Inter_600SemiBold',
-  },
+  agentName: { color: '#fb923c', fontSize: 11, fontWeight: '600', fontFamily: 'Inter_600SemiBold' },
 });

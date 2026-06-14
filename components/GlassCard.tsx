@@ -1,4 +1,4 @@
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 
 interface GlassCardProps {
@@ -18,7 +18,15 @@ export function GlassCard({ children, style, padding = 16 }: GlassCardProps) {
           borderColor: colors.cardBorder,
           borderRadius: colors.radius,
           padding,
-          shadowColor: colors.shadow,
+          ...(Platform.OS === 'web'
+            ? { boxShadow: `0px 6px 20px ${colors.shadow}` }
+            : {
+                shadowColor: colors.shadow,
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 1,
+                shadowRadius: 20,
+                elevation: 6,
+              }),
         },
         style,
       ]}
@@ -31,9 +39,5 @@ export function GlassCard({ children, style, padding = 16 }: GlassCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    elevation: 6,
   },
 });

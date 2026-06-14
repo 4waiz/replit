@@ -8,6 +8,12 @@ import { useColors } from '@/hooks/useColors';
 import { agents } from '@/lib/mockData';
 import { AgentCard } from '@/components/AgentCard';
 
+function hapticMedium() {
+  if (Platform.OS !== 'web') {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -17,7 +23,7 @@ export default function HomeScreen() {
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
   function handleScan() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticMedium();
     router.push('/scan');
   }
 

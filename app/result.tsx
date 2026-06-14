@@ -4,6 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+
+function hapticMedium() {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+}
 import { useColors } from '@/hooks/useColors';
 import { useApp } from '@/context/AppContext';
 import { agents } from '@/lib/mockData';
@@ -21,7 +25,7 @@ export default function ResultScreen() {
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
   function handleRescan() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    hapticMedium();
     reset();
     router.replace('/');
   }

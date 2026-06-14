@@ -15,6 +15,16 @@ import { workTypes, getAnalysis } from '@/lib/mockData';
 import { WorkTypePill } from '@/components/WorkTypePill';
 import { GlassCard } from '@/components/GlassCard';
 
+function hapticSuccess() {
+  if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+function hapticSelection() {
+  if (Platform.OS !== 'web') Haptics.selectionAsync();
+}
+function hapticHeavy() {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+}
+
 export default function ScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -41,7 +51,7 @@ export default function ScanScreen() {
     });
     if (!res.canceled && res.assets[0]) {
       setLocalPhoto(res.assets[0].uri);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      hapticSuccess();
     }
   }
 
@@ -58,18 +68,18 @@ export default function ScanScreen() {
     });
     if (!res.canceled && res.assets[0]) {
       setLocalPhoto(res.assets[0].uri);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      hapticSuccess();
     }
   }
 
   function selectWorkType(id: string) {
     setLocalWorkType(id);
-    Haptics.selectionAsync();
+    hapticSelection();
   }
 
   function handleAnalyze() {
     if (!canAnalyze || !localWorkType) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    hapticHeavy();
     setPhoto(localPhoto);
     setWorkTypeId(localWorkType);
     setResult(getAnalysis(localWorkType));
