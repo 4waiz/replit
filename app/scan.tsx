@@ -35,7 +35,28 @@ export default function ScanScreen() {
   const bottomPad = WEB ? 28 : insets.bottom;
   const canAnalyze = !!localWorkType && (!!localPhoto || demoSite);
 
+  function webFileInput(capture?: 'environment' | 'user') {
+    return new Promise<string | null>((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      if (capture) (input as any).capture = capture;
+      input.onchange = (e: any) => {
+        const file: File | undefined = e.target?.files?.[0];
+        if (file) resolve(URL.createObjectURL(file));
+        else resolve(null);
+      };
+      input.oncancel = () => resolve(null);
+      input.click();
+    });
+  }
+
   async function pickFromCamera() {
+    if (WEB) {
+      const uri = await webFileInput('environment');
+      if (uri) { setLocalPhoto(uri); setDemoSite(false); }
+      return;
+    }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Camera needed', 'Allow camera access to capture the worksite.');
@@ -46,6 +67,11 @@ export default function ScanScreen() {
   }
 
   async function pickFromLibrary() {
+    if (WEB) {
+      const uri = await webFileInput();
+      if (uri) { setLocalPhoto(uri); setDemoSite(false); }
+      return;
+    }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Photos needed', 'Allow photo access to upload a worksite photo.');
