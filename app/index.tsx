@@ -61,7 +61,7 @@ export default function WakeScreen() {
         {/* Top status bar */}
         <View style={styles.topBar}>
           <Image
-            source={require('@/assets/images/logo.png')}
+            source={require('@/assets/images/logo-v2.png')}
             style={styles.headerLogo}
             resizeMode="contain"
           />
