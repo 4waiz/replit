@@ -26,7 +26,7 @@ const queryClient = new QueryClient();
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
-    html, body, #root { height: 100%; margin: 0; background-color: #1c0800; }
+    html, body, #root { height: 100%; margin: 0; background-color: #070707; }
     #root { display: flex; flex-direction: column; }
   `;
   document.head.appendChild(style);
@@ -56,11 +56,13 @@ export default function RootLayout() {
             <KeyboardProvider>
               <AppProvider>
                 <StatusBar style="light" />
-                <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+                <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#070707' } }}>
                   <Stack.Screen name="index" />
                   <Stack.Screen name="scan" />
                   <Stack.Screen name="loading" />
                   <Stack.Screen name="result" />
+                  <Stack.Screen name="alert" />
+                  <Stack.Screen name="report" />
                 </Stack>
               </AppProvider>
             </KeyboardProvider>

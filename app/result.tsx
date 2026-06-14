@@ -1,181 +1,162 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform, LayoutAnimation, UIManager } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-
-function hapticMedium() {
-  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-}
-import { useColors } from '@/hooks/useColors';
+import { palette, bgGradient, riskColor } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
-import { agents } from '@/lib/mockData';
-import { GlassCard } from '@/components/GlassCard';
-import { AgentCard } from '@/components/AgentCard';
-import { MetricCard } from '@/components/MetricCard';
+import { RiskGauge } from '@/components/RiskGauge';
+import { MetricBar } from '@/components/MetricBar';
+import { WeatherEvidenceCard } from '@/components/WeatherEvidenceCard';
+import { GlassPanel } from '@/components/GlassPanel';
 
-export default function ResultScreen() {
+const WEB = Platform.OS === 'web';
+if (!WEB && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+function hapticLight() { if (!WEB) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }
+
+export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const colors = useColors();
   const { result, reset } = useApp();
+  const [showWhy, setShowWhy] = useState(false);
 
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
-  const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
-
-  function handleRescan() {
-    hapticMedium();
-    reset();
-    router.replace('/');
-  }
+  const topPad = WEB ? 52 : insets.top;
+  const bottomPad = WEB ? 28 : insets.bottom;
 
   if (!result) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: colors.foreground, fontSize: 16 }}>No result found.</Text>
-        <TouchableOpacity onPress={() => router.replace('/')} style={{ marginTop: 20 }}>
-          <Text style={{ color: colors.primary, fontWeight: '700' }}>Go Home</Text>
+      <View style={[styles.container, styles.centered]}>
+        <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
+        <Text style={{ color: palette.text, fontSize: 16, marginBottom: 16 }}>No analysis found.</Text>
+        <TouchableOpacity onPress={() => router.replace('/')}>
+          <Text style={{ color: palette.primary, fontWeight: '700' }}>Back to home</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const riskColor = result.riskLevel === 'Critical' ? colors.danger : colors.warning;
+  const color = riskColor[result.riskLevel];
+
+  function toggleWhy() {
+    hapticLight();
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowWhy((s) => !s);
+  }
+
+  function newScan() {
+    reset();
+    router.replace('/');
+  }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={styles.container}>
+      <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
+      <View style={[styles.glowTop, { backgroundColor: color }]} />
+
       {/* Header */}
-      <LinearGradient
-        colors={['#1c0800', '#431407']}
-        style={[styles.header, { paddingTop: topPad + 8 }]}
-      >
-        <TouchableOpacity onPress={handleRescan} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+      <View style={[styles.header, { paddingTop: topPad + 6 }]}>
+        <TouchableOpacity onPress={newScan} style={styles.iconBtn}>
+          <Ionicons name="arrow-back" size={20} color={palette.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>RISK DASHBOARD</Text>
+        <Text style={styles.headerTitle}>SAFETY DECISION</Text>
         <View style={{ width: 38 }} />
-      </LinearGradient>
+      </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 100 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Risk Score */}
-        <View style={styles.scoreSection}>
-          <View style={[styles.scoreRing, { borderColor: riskColor }]}>
-            <View style={[styles.scoreInner, { borderColor: `${riskColor}30` }]}>
-              <Text style={[styles.scoreNumber, { color: riskColor }]}>{result.riskScore}</Text>
-              <Text style={[styles.scoreUnit, { color: riskColor }]}>/ 100</Text>
-            </View>
-          </View>
-          <View style={[styles.riskBadge, { backgroundColor: `${riskColor}22`, borderColor: `${riskColor}50` }]}>
-            <Ionicons name="warning" size={14} color={riskColor} />
-            <Text style={[styles.riskBadgeText, { color: riskColor }]}>{result.riskLevel} Risk · {result.workType}</Text>
-          </View>
-          <Text style={[styles.primaryAction, { color: colors.foreground }]}>
-            {result.primaryAction}
-          </Text>
-          <Text style={[styles.supervisorNote, { color: colors.mutedForeground }]}>
-            {result.supervisorAction}
-          </Text>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 110 }]} showsVerticalScrollIndicator={false}>
+        {/* Gauge */}
+        <View style={styles.gaugeWrap}>
+          <RiskGauge score={result.riskScore} level={result.riskLevel} size={200} />
+          <Text style={[styles.workTag, { color: palette.textMuted }]}>{result.workTypeLabel} · {result.weather.locationName.split('·')[0].trim()}</Text>
         </View>
 
-        {/* Metrics Row */}
-        <View style={styles.metricsRow}>
-          <MetricCard label="Heat Exp." value={result.heatExposure} tone="danger" />
-          <MetricCard label="Fatigue" value={result.fatigueRisk} tone="warning" />
-          <MetricCard label="Hydration" value={72} tone="success" />
-        </View>
-
-        {/* Top Risks */}
-        <GlassCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="alert-circle" size={18} color={colors.danger} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Top Risks</Text>
+        {/* Supervisor action */}
+        <GlassPanel glow={color} style={styles.actionPanel} padding={18}>
+          <View style={styles.actionHead}>
+            <Ionicons name="warning" size={18} color={color} />
+            <Text style={[styles.actionTitle, { color }]}>Supervisor Action</Text>
           </View>
-          {result.topRisks.map((risk) => (
-            <View key={risk} style={styles.listItem}>
-              <View style={[styles.listDot, { backgroundColor: colors.danger }]} />
-              <Text style={[styles.listText, { color: colors.foreground }]}>{risk}</Text>
-            </View>
-          ))}
-        </GlassCard>
+          <Text style={styles.actionText}>{result.supervisorAction}</Text>
+        </GlassPanel>
 
-        {/* Task Adjustment */}
-        <GlassCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="create" size={18} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Task Adjustment</Text>
-          </View>
-          <Text style={[styles.bodyText, { color: colors.foreground }]}>{result.taskAdjustment}</Text>
-          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
-          {result.mitigation.map((m) => (
-            <View key={m} style={styles.listItem}>
-              <View style={[styles.listDot, { backgroundColor: colors.primary }]} />
-              <Text style={[styles.listText, { color: colors.foreground }]}>{m}</Text>
-            </View>
-          ))}
-        </GlassCard>
+        {/* Sub-scores */}
+        <GlassPanel style={styles.panel} padding={18}>
+          <Text style={styles.panelTitle}>Risk Breakdown</Text>
+          <MetricBar icon="flame" label="Heat exposure" value={result.risk.heatExposure} color={palette.critical} />
+          <MetricBar icon="battery-half" label="Fatigue risk" value={result.risk.fatigueRisk} color={palette.primary} />
+          <MetricBar icon="water" label="Hydration urgency" value={result.risk.hydrationUrgency} color={palette.amber} />
+        </GlassPanel>
 
-        {/* Break Schedule */}
-        <GlassCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="time" size={18} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Break Schedule</Text>
+        {/* Weather evidence */}
+        <WeatherEvidenceCard weather={result.weather} />
+
+        {/* Break schedule */}
+        <GlassPanel style={styles.panel} padding={18}>
+          <View style={styles.panelHead}>
+            <Ionicons name="time" size={17} color={palette.primary} />
+            <Text style={styles.panelTitleInline}>Break & Hydration Schedule</Text>
           </View>
           {result.breakSchedule.map((slot) => (
-            <View key={slot.time} style={[styles.scheduleRow, { borderColor: colors.cardBorder, backgroundColor: colors.muted }]}>
-              <Text style={[styles.scheduleTime, { color: colors.primary }]}>{slot.time}</Text>
-              <Text style={[styles.scheduleActivity, { color: colors.foreground }]}>{slot.activity}</Text>
+            <View key={slot.time} style={styles.schedRow}>
+              <Text style={styles.schedTime}>{slot.time}</Text>
+              <Text style={styles.schedAct}>{slot.activity}</Text>
             </View>
           ))}
-        </GlassCard>
+        </GlassPanel>
 
-        {/* Agents */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>SAFETY AGENTS</Text>
-        {agents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} state="done" />
-        ))}
-
-        {/* Multilingual Messages */}
-        <GlassCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="chatbubbles" size={18} color={colors.primary} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Worker Safety Message</Text>
+        {/* Task adjustment */}
+        <GlassPanel style={styles.panel} padding={18}>
+          <View style={styles.panelHead}>
+            <Ionicons name="construct" size={17} color={palette.primary} />
+            <Text style={styles.panelTitleInline}>Task Adjustment</Text>
           </View>
-          {result.workerMessages.map((msg) => (
-            <View
-              key={msg.code}
-              style={[styles.msgCard, { backgroundColor: colors.muted, borderColor: colors.cardBorder }]}
-            >
-              <View style={styles.msgHeader}>
-                <View style={[styles.codePill, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.codeText}>{msg.code}</Text>
-                </View>
-                <Text style={[styles.langLabel, { color: colors.mutedForeground }]}>{msg.language}</Text>
-              </View>
-              <Text style={[
-                styles.msgText,
-                { color: colors.foreground, textAlign: msg.rtl ? 'right' : 'left' }
-              ]}>
-                {msg.text}
+          <Text style={styles.bodyText}>{result.taskAdjustment}</Text>
+        </GlassPanel>
+
+        {/* Agent reasoning summary */}
+        <GlassPanel style={styles.panel} padding={18}>
+          <View style={styles.panelHead}>
+            <Ionicons name="git-network" size={17} color={palette.primary} />
+            <Text style={styles.panelTitleInline}>Agent Reasoning</Text>
+            {result.poweredByGroq && (
+              <View style={styles.groqTag}><Text style={styles.groqText}>GROQ</Text></View>
+            )}
+          </View>
+          {result.agents.map((a) => (
+            <View key={a.id} style={styles.agentLine}>
+              <View style={styles.agentDot} />
+              <Text style={styles.agentText}>
+                <Text style={styles.agentName}>{a.name.replace(' Agent', '')}: </Text>
+                {a.decision} <Text style={styles.agentConf}>· {a.confidence}%</Text>
               </Text>
             </View>
           ))}
-        </GlassCard>
+
+          <TouchableOpacity onPress={toggleWhy} style={styles.whyBtn} activeOpacity={0.8}>
+            <Text style={styles.whyText}>{showWhy ? 'Hide explanation' : 'Why this decision?'}</Text>
+            <Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={15} color={palette.primary} />
+          </TouchableOpacity>
+          {showWhy && <Text style={styles.whyBody}>{result.reasoningSummary}</Text>}
+        </GlassPanel>
+
+        {/* Next steps */}
+        <TouchableOpacity onPress={() => router.push('/alert')} activeOpacity={0.9} style={styles.linkBtn}>
+          <Ionicons name="chatbubbles" size={18} color={palette.primary} />
+          <Text style={styles.linkText}>Worker Safety Alert</Text>
+          <Ionicons name="chevron-forward" size={16} color={palette.textFaint} />
+        </TouchableOpacity>
       </ScrollView>
 
-      {/* Sticky bottom */}
-      <View style={[styles.footer, { paddingBottom: bottomPad + 16, backgroundColor: colors.background, borderTopColor: colors.divider }]}>
-        <TouchableOpacity
-          onPress={handleRescan}
-          activeOpacity={0.85}
-          style={[styles.rescanBtn, { backgroundColor: colors.muted, borderColor: colors.cardBorder }]}
-        >
-          <Ionicons name="refresh" size={18} color={colors.primary} />
-          <Text style={[styles.rescanText, { color: colors.primary }]}>Scan New Worksite</Text>
+      {/* Sticky CTA */}
+      <View style={[styles.footer, { paddingBottom: bottomPad + 14 }]}>
+        <TouchableOpacity onPress={() => router.push('/report')} activeOpacity={0.9} style={styles.ctaWrap}>
+          <LinearGradient colors={[palette.amber, palette.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
+            <Ionicons name="document-text" size={19} color="#0A0A0A" />
+            <Text style={styles.ctaText}>VIEW SAFETY REPORT</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -183,163 +164,55 @@ export default function ResultScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 2,
-    fontFamily: 'Inter_700Bold',
-  },
+  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  glowTop: { position: 'absolute', top: -160, alignSelf: 'center', width: 320, height: 320, borderRadius: 160, opacity: 0.14 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+  iconBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: palette.glass, borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { color: palette.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+  content: { paddingHorizontal: 20 },
 
-  scroll: { flex: 1 },
-  content: { padding: 20 },
+  gaugeWrap: { alignItems: 'center', paddingVertical: 12 },
+  workTag: { fontSize: 13, fontWeight: '600', marginTop: 12, fontFamily: 'Inter_500Medium' },
 
-  scoreSection: { alignItems: 'center', paddingVertical: 24 },
-  scoreRing: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  scoreInner: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreNumber: {
-    fontSize: 48,
-    fontWeight: '900',
-    fontFamily: 'Inter_700Bold',
-    lineHeight: 52,
-  },
-  scoreUnit: {
-    fontSize: 13,
-    fontWeight: '600',
-    fontFamily: 'Inter_500Medium',
-  },
-  riskBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 100,
-    marginBottom: 12,
-  },
-  riskBadgeText: { fontSize: 13, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-  primaryAction: {
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 8,
-    fontFamily: 'Inter_700Bold',
-  },
-  supervisorNote: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 300,
-    fontFamily: 'Inter_400Regular',
-  },
+  actionPanel: { marginTop: 8, marginBottom: 14, borderColor: 'rgba(255,255,255,0.14)' },
+  actionHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  actionTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
+  actionText: { color: palette.text, fontSize: 16, fontWeight: '700', lineHeight: 23, fontFamily: 'Inter_600SemiBold' },
 
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
+  panel: { marginBottom: 14 },
+  panelTitle: { color: palette.text, fontSize: 15, fontWeight: '700', marginBottom: 16, fontFamily: 'Inter_600SemiBold' },
+  panelHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+  panelTitleInline: { color: palette.text, fontSize: 15, fontWeight: '700', flex: 1, fontFamily: 'Inter_600SemiBold' },
 
-  card: { marginBottom: 16 },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: 'Inter_600SemiBold',
-  },
-  listItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
-  listDot: { width: 6, height: 6, borderRadius: 3, marginTop: 6 },
-  listText: { flex: 1, fontSize: 13, lineHeight: 20, fontFamily: 'Inter_400Regular' },
-  bodyText: { fontSize: 13, lineHeight: 20, marginBottom: 14, fontFamily: 'Inter_400Regular' },
-  divider: { height: 1, marginBottom: 14 },
+  schedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: palette.border },
+  schedTime: { color: palette.primary, fontSize: 13, fontWeight: '700', minWidth: 110, fontFamily: 'Inter_600SemiBold' },
+  schedAct: { flex: 1, color: palette.text, fontSize: 13, textAlign: 'right', fontFamily: 'Inter_400Regular' },
 
-  scheduleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 8,
-  },
-  scheduleTime: { fontSize: 13, fontWeight: '700', fontFamily: 'Inter_600SemiBold', minWidth: 100 },
-  scheduleActivity: { fontSize: 13, flex: 1, textAlign: 'right', fontFamily: 'Inter_400Regular' },
+  bodyText: { color: palette.text, fontSize: 14, lineHeight: 21, fontFamily: 'Inter_400Regular' },
 
-  sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    marginBottom: 10,
-    marginTop: 4,
-    fontFamily: 'Inter_600SemiBold',
-  },
+  groqTag: { borderWidth: 1, borderColor: `${palette.safe}55`, backgroundColor: `${palette.safe}1A`, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  groqText: { color: palette.safe, fontSize: 9, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
+  agentLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 9, marginBottom: 10 },
+  agentDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.primary, marginTop: 6 },
+  agentText: { flex: 1, color: palette.textMuted, fontSize: 13, lineHeight: 19, fontFamily: 'Inter_400Regular' },
+  agentName: { color: palette.text, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+  agentConf: { color: palette.safe, fontWeight: '700' },
+  whyBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.border },
+  whyText: { color: palette.primary, fontSize: 13, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+  whyBody: { color: palette.textMuted, fontSize: 13, lineHeight: 20, marginTop: 10, fontFamily: 'Inter_400Regular' },
 
-  msgCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 10,
+  linkBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: palette.glass,
+    borderWidth: 1, borderColor: palette.border, borderRadius: 16, paddingVertical: 15, paddingHorizontal: 16,
   },
-  msgHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  codePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  codeText: { color: '#fff', fontSize: 11, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  langLabel: { fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
-  msgText: { fontSize: 13, lineHeight: 20, fontFamily: 'Inter_400Regular' },
+  linkText: { flex: 1, color: palette.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
 
   footer: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    position: WEB ? ('sticky' as any) : 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(7,7,7,0.92)', borderTopWidth: 1, borderTopColor: palette.border,
   },
-  rescanBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    borderWidth: 1,
-    paddingVertical: 16,
-    borderRadius: 18,
-  },
-  rescanText: { fontSize: 15, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+  ctaWrap: { borderRadius: 18, overflow: 'hidden' },
+  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
+  ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
 });
