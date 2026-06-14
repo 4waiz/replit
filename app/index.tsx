@@ -153,7 +153,7 @@ function makeStyles(p: Palette) {
     blobBottom: { bottom: -80, left: -90, backgroundColor: p.critical, opacity: 0.12 },
 
     topBar: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-    headerLogo: { width: 100, height: 36 },
+    headerLogo: { width: 120, height: 44 },
 
     topRight: { alignItems: 'flex-end', gap: 6 },
     onlinePill: {
