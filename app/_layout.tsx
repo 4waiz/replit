@@ -43,7 +43,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     }
     #root {
       width: 100%;
-      max-width: 430px;
+      max-width: 390px;
       min-height: 100%;
       display: flex;
       flex-direction: column;
