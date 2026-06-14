@@ -2,23 +2,25 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { palette } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { WorkerAlert } from '@/lib/agentEngine';
+import { Palette } from '@/constants/colors';
 
 interface WorkerAlertCardProps {
   alert: WorkerAlert;
 }
 
-const CODE_COLORS: Record<string, string> = {
-  EN: palette.primary,
-  AR: palette.amber,
-  HI: palette.safe,
-  UR: '#A78BFA',
-};
-
-// One multilingual worker alert with RTL-aware text and copy/share actions.
 export function WorkerAlertCard({ alert }: WorkerAlertCardProps) {
+  const { palette } = useTheme();
+  const styles = makeStyles(palette);
   const [copied, setCopied] = useState(false);
+
+  const CODE_COLORS: Record<string, string> = {
+    EN: palette.primary,
+    AR: palette.amber,
+    HI: palette.safe,
+    UR: '#A78BFA',
+  };
   const accent = CODE_COLORS[alert.code] ?? palette.primary;
 
   async function copy() {
@@ -28,15 +30,8 @@ export function WorkerAlertCard({ alert }: WorkerAlertCardProps) {
   }
 
   async function share() {
-    if (Platform.OS === 'web') {
-      await copy();
-      return;
-    }
-    try {
-      await Share.share({ message: alert.text });
-    } catch {
-      /* user cancelled */
-    }
+    if (Platform.OS === 'web') { await copy(); return; }
+    try { await Share.share({ message: alert.text }); } catch { /* user cancelled */ }
   }
 
   return (
@@ -56,10 +51,7 @@ export function WorkerAlertCard({ alert }: WorkerAlertCardProps) {
         </View>
       </View>
       <Text
-        style={[
-          styles.text,
-          { textAlign: alert.rtl ? 'right' : 'left', writingDirection: alert.rtl ? 'rtl' : 'ltr' },
-        ]}
+        style={[styles.text, { textAlign: alert.rtl ? 'right' : 'left', writingDirection: alert.rtl ? 'rtl' : 'ltr' }]}
       >
         {alert.text}
       </Text>
@@ -67,28 +59,26 @@ export function WorkerAlertCard({ alert }: WorkerAlertCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: palette.glass,
-    borderWidth: 1,
-    borderColor: palette.border,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 10,
-    ...Platform.select({ web: { backdropFilter: 'blur(12px)' } as any, default: {} }),
-  },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  codePill: { borderWidth: 1, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 },
-  code: { fontSize: 11, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  lang: { flex: 1, color: palette.textMuted, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
-  actions: { flexDirection: 'row', gap: 4 },
-  iconBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  text: { color: palette.text, fontSize: 14, lineHeight: 21, fontFamily: 'Inter_400Regular' },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: p.glass,
+      borderWidth: 1,
+      borderColor: p.border,
+      borderRadius: 16,
+      padding: 14,
+      marginBottom: 10,
+      ...Platform.select({ web: { backdropFilter: 'blur(12px)' } as any, default: {} }),
+    },
+    head: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+    codePill: { borderWidth: 1, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 },
+    code: { fontSize: 11, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+    lang: { flex: 1, color: p.textMuted, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    actions: { flexDirection: 'row', gap: 4 },
+    iconBtn: {
+      width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+      backgroundColor: p.glass,
+    },
+    text: { color: p.text, fontSize: 14, lineHeight: 21, fontFamily: 'Inter_400Regular' },
+  });
+}

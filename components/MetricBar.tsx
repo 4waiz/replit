@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { palette } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
+import { Palette } from '@/constants/colors';
 
 interface MetricBarProps {
   icon: string;
   label: string;
-  value: number; // 0-100
+  value: number;
   color: string;
 }
 
-// Horizontal labelled progress bar for sub-scores (heat, fatigue, hydration).
 export function MetricBar({ icon, label, value, color }: MetricBarProps) {
+  const { palette } = useTheme();
+  const styles = makeStyles(palette);
   const fill = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -44,12 +46,14 @@ export function MetricBar({ icon, label, value, color }: MetricBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { marginBottom: 14 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  label: { color: palette.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
-  value: { fontSize: 14, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  track: { height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.07)', overflow: 'hidden' },
-  fill: { height: 7, borderRadius: 4 },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    wrap: { marginBottom: 14 },
+    top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 },
+    labelRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+    label: { color: p.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    value: { fontSize: 14, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+    track: { height: 7, borderRadius: 4, backgroundColor: p.glass, overflow: 'hidden' },
+    fill: { height: 7, borderRadius: 4 },
+  });
+}

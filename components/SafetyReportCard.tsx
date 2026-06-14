@@ -1,15 +1,17 @@
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { palette, riskColor } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { MascotAssistant } from './MascotAssistant';
 import { AnalysisResult } from '@/lib/agentEngine';
+import { Palette } from '@/constants/colors';
 
 interface SafetyReportCardProps {
   result: AnalysisResult;
 }
 
-// Screenshot-worthy safety report card — the shareable artifact.
 export function SafetyReportCard({ result }: SafetyReportCardProps) {
+  const { palette, riskColor } = useTheme();
+  const styles = makeStyles(palette);
   const color = riskColor[result.riskLevel];
   const avgConf = Math.round(result.agents.reduce((s, a) => s + a.confidence, 0) / result.agents.length);
   const nextBreak = result.breakSchedule[0]?.activity ?? 'Hydration break';
@@ -26,7 +28,6 @@ export function SafetyReportCard({ result }: SafetyReportCardProps) {
 
   return (
     <View style={styles.card}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <MascotAssistant size={44} glow={false} />
@@ -38,7 +39,6 @@ export function SafetyReportCard({ result }: SafetyReportCardProps) {
         <Text style={styles.date}>{result.generatedAtLabel}</Text>
       </View>
 
-      {/* Risk banner */}
       <View style={[styles.banner, { backgroundColor: `${color}1A`, borderColor: `${color}55` }]}>
         <View>
           <Text style={styles.bannerLabel}>RISK LEVEL</Text>
@@ -49,7 +49,6 @@ export function SafetyReportCard({ result }: SafetyReportCardProps) {
         </View>
       </View>
 
-      {/* Rows */}
       <View style={styles.rows}>
         {rows.map((r) => (
           <View key={r.label} style={styles.row}>
@@ -59,7 +58,6 @@ export function SafetyReportCard({ result }: SafetyReportCardProps) {
         ))}
       </View>
 
-      {/* Signature */}
       <View style={styles.signature}>
         <Ionicons name="shield-checkmark" size={13} color={palette.primary} />
         <Text style={styles.sigText}>
@@ -70,48 +68,40 @@ export function SafetyReportCard({ result }: SafetyReportCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: palette.bgRaised,
-    borderWidth: 1,
-    borderColor: palette.borderStrong,
-    borderRadius: 24,
-    padding: 18,
-    ...Platform.select({
-      web: { boxShadow: '0 20px 50px rgba(0,0,0,0.5)' } as any,
-      default: { shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 30, shadowOffset: { width: 0, height: 16 }, elevation: 12 },
-    }),
-  },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brand: { color: palette.text, fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
-  sub: { color: palette.textMuted, fontSize: 12, fontFamily: 'Inter_400Regular' },
-  date: { color: palette.textFaint, fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right', maxWidth: 110 },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  bannerLabel: { color: palette.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1, fontFamily: 'Inter_600SemiBold' },
-  bannerLevel: { fontSize: 26, fontWeight: '900', fontFamily: 'Inter_700Bold', marginTop: 2 },
-  scoreBubble: { width: 56, height: 56, borderRadius: 28, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
-  scoreNum: { fontSize: 22, fontWeight: '900', fontFamily: 'Inter_700Bold' },
-  rows: { gap: 10 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
-  rowLabel: { color: palette.textFaint, fontSize: 12.5, fontFamily: 'Inter_500Medium', width: 110 },
-  rowValue: { flex: 1, color: palette.text, fontSize: 12.5, lineHeight: 18, textAlign: 'right', fontFamily: 'Inter_500Medium' },
-  signature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-  },
-  sigText: { color: palette.textMuted, fontSize: 11, fontFamily: 'Inter_400Regular' },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: p.bgRaised,
+      borderWidth: 1,
+      borderColor: p.borderStrong,
+      borderRadius: 24,
+      padding: 18,
+      ...Platform.select({
+        web: { boxShadow: '0 20px 50px rgba(0,0,0,0.2)' } as any,
+        default: { shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
+      }),
+    },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    brand: { color: p.text, fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
+    sub: { color: p.textMuted, fontSize: 12, fontFamily: 'Inter_400Regular' },
+    date: { color: p.textFaint, fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right', maxWidth: 110 },
+    banner: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 16,
+    },
+    bannerLabel: { color: p.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 1, fontFamily: 'Inter_600SemiBold' },
+    bannerLevel: { fontSize: 26, fontWeight: '900', fontFamily: 'Inter_700Bold', marginTop: 2 },
+    scoreBubble: { width: 56, height: 56, borderRadius: 28, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
+    scoreNum: { fontSize: 22, fontWeight: '900', fontFamily: 'Inter_700Bold' },
+    rows: { gap: 10 },
+    row: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
+    rowLabel: { color: p.textFaint, fontSize: 12.5, fontFamily: 'Inter_500Medium', width: 110 },
+    rowValue: { flex: 1, color: p.text, fontSize: 12.5, lineHeight: 18, textAlign: 'right', fontFamily: 'Inter_500Medium' },
+    signature: {
+      flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 16,
+      paddingTop: 14, borderTopWidth: 1, borderTopColor: p.border,
+    },
+    sigText: { color: p.textMuted, fontSize: 11, fontFamily: 'Inter_400Regular' },
+  });
+}

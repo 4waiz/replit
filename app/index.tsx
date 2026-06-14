@@ -5,9 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { palette, bgGradient } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { MascotAssistant } from '@/components/MascotAssistant';
+import { Palette } from '@/constants/colors';
 
 function hapticMedium() {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -19,6 +20,8 @@ export default function WakeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { weather, weatherLoading } = useApp();
+  const { palette, bgGradient, theme, toggleTheme } = useTheme();
+  const styles = makeStyles(palette);
 
   const topPad = WEB ? 56 : insets.top;
   const bottomPad = WEB ? 28 : insets.bottom;
@@ -51,7 +54,6 @@ export default function WakeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
-      {/* Heat wash blobs */}
       <View style={[styles.blob, styles.blobTop]} />
       <View style={[styles.blob, styles.blobBottom]} />
 
@@ -63,9 +65,23 @@ export default function WakeScreen() {
             style={styles.headerLogo}
             resizeMode="contain"
           />
-          <View style={styles.onlinePill}>
-            <Animated.View style={[styles.onlineDot, { opacity: pulse }]} />
-            <Text style={styles.onlineText}>Agent online</Text>
+          {/* Right side: Agent online + theme toggle stacked */}
+          <View style={styles.topRight}>
+            <View style={styles.onlinePill}>
+              <Animated.View style={[styles.onlineDot, { opacity: pulse }]} />
+              <Text style={styles.onlineText}>Agent online</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => { toggleTheme(); if (!WEB) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+              style={styles.themeBtn}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name={theme === 'dark' ? 'sunny-outline' : 'moon-outline'}
+                size={16}
+                color={palette.textMuted}
+              />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -123,86 +139,100 @@ export default function WakeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.bg,
-    ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }),
-  },
-  content: { flex: 1, paddingHorizontal: 22, justifyContent: 'space-between' },
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: p.bg,
+      ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }),
+    },
+    content: { flex: 1, paddingHorizontal: 22, justifyContent: 'space-between' },
 
-  blob: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.18 },
-  blobTop: { top: -120, right: -100, backgroundColor: palette.primary },
-  blobBottom: { bottom: -100, left: -120, backgroundColor: palette.critical, opacity: 0.12 },
+    blob: { position: 'absolute', width: 320, height: 320, borderRadius: 160, opacity: 0.18 },
+    blobTop: { top: -120, right: -100, backgroundColor: p.primary },
+    blobBottom: { bottom: -100, left: -120, backgroundColor: p.critical, opacity: 0.12 },
 
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerLogo: { width: 120, height: 44 },
-  onlinePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: palette.glass,
-    borderWidth: 1,
-    borderColor: palette.border,
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 100,
-  },
-  onlineDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: palette.safe },
-  onlineText: { color: palette.textMuted, fontSize: 11, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    topBar: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+    headerLogo: { width: 120, height: 44 },
 
-  hero: { alignItems: 'center' },
-  title: { color: palette.text, fontSize: 40, fontWeight: '900', letterSpacing: 1, marginTop: 6, fontFamily: 'Inter_700Bold' },
-  tagline: {
-    color: palette.textMuted,
-    fontSize: 14.5,
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 21,
-    maxWidth: 280,
-    fontFamily: 'Inter_400Regular',
-  },
-  weatherChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: palette.glass,
-    borderWidth: 1,
-    borderColor: palette.border,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 100,
-    marginTop: 22,
-    ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
-  },
-  weatherText: { color: palette.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium', flexShrink: 1 },
-  groqPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(255,122,26,0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,122,26,0.30)',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 100,
-    marginTop: 10,
-  },
-  groqPillText: { color: palette.primary, fontSize: 12, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-  liveTag: { borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginLeft: 2 },
-  liveTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
+    topRight: { alignItems: 'flex-end', gap: 8 },
+    onlinePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: p.glass,
+      borderWidth: 1,
+      borderColor: p.border,
+      paddingHorizontal: 11,
+      paddingVertical: 5,
+      borderRadius: 100,
+    },
+    onlineDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: p.safe },
+    onlineText: { color: p.textMuted, fontSize: 11, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    themeBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      backgroundColor: p.glass,
+      borderWidth: 1,
+      borderColor: p.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  footer: { gap: 12 },
-  ctaWrap: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    ...Platform.select({
-      web: { boxShadow: '0 12px 30px rgba(255,122,26,0.4)' } as any,
-      default: { shadowColor: palette.primary, shadowOpacity: 0.45, shadowRadius: 22, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
-    }),
-  },
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
-  ctaText: { color: '#0A0A0A', fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
-  hint: { color: palette.textFaint, fontSize: 12, textAlign: 'center', fontFamily: 'Inter_400Regular' },
-});
+    hero: { alignItems: 'center' },
+    title: { color: p.text, fontSize: 40, fontWeight: '900', letterSpacing: 1, marginTop: 6, fontFamily: 'Inter_700Bold' },
+    tagline: {
+      color: p.textMuted,
+      fontSize: 14.5,
+      textAlign: 'center',
+      marginTop: 8,
+      lineHeight: 21,
+      maxWidth: 280,
+      fontFamily: 'Inter_400Regular',
+    },
+    weatherChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: p.glass,
+      borderWidth: 1,
+      borderColor: p.border,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: 100,
+      marginTop: 22,
+      ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
+    },
+    weatherText: { color: p.text, fontSize: 13, fontWeight: '600', fontFamily: 'Inter_500Medium', flexShrink: 1 },
+    groqPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'center',
+      backgroundColor: `${p.primary}1A`,
+      borderWidth: 1,
+      borderColor: `${p.primary}44`,
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: 100,
+      marginTop: 10,
+    },
+    groqPillText: { color: p.primary, fontSize: 12, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+    liveTag: { borderWidth: 1, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, marginLeft: 2 },
+    liveTagText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5, fontFamily: 'Inter_700Bold' },
+
+    footer: { gap: 12 },
+    ctaWrap: {
+      borderRadius: 20,
+      overflow: 'hidden',
+      ...Platform.select({
+        web: { boxShadow: '0 12px 30px rgba(255,122,26,0.4)' } as any,
+        default: { shadowColor: p.primary, shadowOpacity: 0.45, shadowRadius: 22, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
+      }),
+    },
+    cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
+    ctaText: { color: '#0A0A0A', fontSize: 16, fontWeight: '900', letterSpacing: 1.5, fontFamily: 'Inter_700Bold' },
+    hint: { color: p.textFaint, fontSize: 12, textAlign: 'center', fontFamily: 'Inter_400Regular' },
+  });
+}

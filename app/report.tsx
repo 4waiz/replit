@@ -4,9 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { palette, bgGradient } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { SafetyReportCard } from '@/components/SafetyReportCard';
+import { Palette } from '@/constants/colors';
 
 const WEB = Platform.OS === 'web';
 
@@ -14,6 +15,8 @@ export default function ReportScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { result, reset } = useApp();
+  const { palette, bgGradient } = useTheme();
+  const styles = makeStyles(palette);
 
   const topPad = WEB ? 52 : insets.top;
   const bottomPad = WEB ? 28 : insets.bottom;
@@ -62,18 +65,20 @@ export default function ReportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
-  iconBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: palette.glass, borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: palette.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
-  content: { paddingHorizontal: 20, paddingTop: 10 },
-  note: { color: palette.textFaint, fontSize: 12, textAlign: 'center', marginTop: 16, fontFamily: 'Inter_400Regular' },
-  footer: {
-    position: WEB ? ('sticky' as any) : 'absolute', left: 0, right: 0, bottom: 0,
-    paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(7,7,7,0.92)', borderTopWidth: 1, borderTopColor: palette.border,
-  },
-  ctaWrap: { borderRadius: 18, overflow: 'hidden' },
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
-  ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: p.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+    iconBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: p.glass, borderWidth: 1, borderColor: p.border, alignItems: 'center', justifyContent: 'center' },
+    headerTitle: { color: p.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+    content: { paddingHorizontal: 20, paddingTop: 10 },
+    note: { color: p.textFaint, fontSize: 12, textAlign: 'center', marginTop: 16, fontFamily: 'Inter_400Regular' },
+    footer: {
+      position: WEB ? ('sticky' as any) : 'absolute', left: 0, right: 0, bottom: 0,
+      paddingHorizontal: 20, paddingTop: 12, backgroundColor: p.footerBg, borderTopWidth: 1, borderTopColor: p.border,
+    },
+    ctaWrap: { borderRadius: 18, overflow: 'hidden' },
+    cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
+    ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
+  });
+}

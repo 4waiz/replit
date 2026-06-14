@@ -16,13 +16,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AppProvider } from '@/context/AppContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-// Web: make html/body/root fill the viewport with the app's dark background
-// so no white space shows below the content.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
@@ -30,6 +29,29 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
     #root { display: flex; flex-direction: column; }
   `;
   document.head.appendChild(style);
+}
+
+function InnerLayout() {
+  const { palette, theme } = useTheme();
+  return (
+    <>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: { backgroundColor: palette.bg },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="scan" />
+        <Stack.Screen name="loading" />
+        <Stack.Screen name="result" />
+        <Stack.Screen name="alert" />
+        <Stack.Screen name="report" />
+      </Stack>
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -55,15 +77,9 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <KeyboardProvider>
               <AppProvider>
-                <StatusBar style="light" />
-                <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: '#070707' } }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="scan" />
-                  <Stack.Screen name="loading" />
-                  <Stack.Screen name="result" />
-                  <Stack.Screen name="alert" />
-                  <Stack.Screen name="report" />
-                </Stack>
+                <ThemeProvider>
+                  <InnerLayout />
+                </ThemeProvider>
               </AppProvider>
             </KeyboardProvider>
           </QueryClientProvider>

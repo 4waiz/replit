@@ -1,5 +1,5 @@
 import { View, Image, StyleSheet, Platform, ViewStyle } from 'react-native';
-import { palette } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 
 interface MascotAssistantProps {
   size?: number;
@@ -7,8 +7,9 @@ interface MascotAssistantProps {
   style?: ViewStyle;
 }
 
-// Starkz AI field assistant avatar — robot in construction gear with a heat glow.
 export function MascotAssistant({ size = 120, glow = true, style }: MascotAssistantProps) {
+  const { palette } = useTheme();
+
   return (
     <View style={[styles.wrap, { width: size, height: size }, style]}>
       {glow && (
@@ -19,6 +20,16 @@ export function MascotAssistant({ size = 120, glow = true, style }: MascotAssist
               width: size * 1.05,
               height: size * 1.05,
               borderRadius: size,
+              backgroundColor: `${palette.primary}2E`,
+              ...Platform.select({
+                web: { boxShadow: `0 0 60px ${palette.primary}55` } as any,
+                default: {
+                  shadowColor: palette.primary,
+                  shadowOpacity: 0.5,
+                  shadowRadius: 40,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              }),
             },
           ]}
         />
@@ -34,17 +45,5 @@ export function MascotAssistant({ size = 120, glow = true, style }: MascotAssist
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center' },
-  glow: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255,122,26,0.18)',
-    ...Platform.select({
-      web: { boxShadow: `0 0 60px ${palette.primary}55` } as any,
-      default: {
-        shadowColor: palette.primary,
-        shadowOpacity: 0.5,
-        shadowRadius: 40,
-        shadowOffset: { width: 0, height: 0 },
-      },
-    }),
-  },
+  glow: { position: 'absolute' },
 });

@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { palette } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { AgentReport } from '@/lib/agentEngine';
+import { Palette } from '@/constants/colors';
 
 export type AgentRunState = 'idle' | 'scanning' | 'complete';
 
@@ -11,9 +12,9 @@ interface AgentRunCardProps {
   state: AgentRunState;
 }
 
-// One agent in the analysis pipeline. Shows live status, evidence, decision and
-// a confidence bar. Reveals reasoning only once the agent is complete.
 export function AgentRunCard({ agent, state }: AgentRunCardProps) {
+  const { palette } = useTheme();
+  const styles = makeStyles(palette);
   const pulse = useRef(new Animated.Value(0.4)).current;
   const fill = useRef(new Animated.Value(0)).current;
 
@@ -38,7 +39,6 @@ export function AgentRunCard({ agent, state }: AgentRunCardProps) {
 
   const active = state !== 'idle';
   const done = state === 'complete';
-
   const statusColor = done ? palette.safe : state === 'scanning' ? palette.amber : palette.textFaint;
 
   return (
@@ -83,43 +83,34 @@ export function AgentRunCard({ agent, state }: AgentRunCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: palette.glass,
-    borderWidth: 1,
-    borderColor: palette.border,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
-  },
-  cardActive: { borderColor: 'rgba(255,176,32,0.35)' },
-  cardDone: { borderColor: 'rgba(52,211,153,0.30)' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,122,26,0.10)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  name: { color: palette.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
-  statusDot: { width: 7, height: 7, borderRadius: 3.5 },
-  statusText: { fontSize: 11, fontWeight: '600', fontFamily: 'Inter_500Medium' },
-  confNum: { color: palette.safe, fontSize: 15, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  body: { marginTop: 12 },
-  evidence: { color: palette.textMuted, fontSize: 12.5, lineHeight: 18, fontFamily: 'Inter_400Regular' },
-  decisionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
-  decision: { flex: 1, color: palette.text, fontSize: 13, fontWeight: '600', lineHeight: 18, fontFamily: 'Inter_500Medium' },
-  barTrack: {
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginTop: 12,
-    overflow: 'hidden',
-  },
-  barFill: { height: 4, borderRadius: 2, backgroundColor: palette.safe },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: p.glass,
+      borderWidth: 1,
+      borderColor: p.border,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 12,
+      ...Platform.select({ web: { backdropFilter: 'blur(14px)' } as any, default: {} }),
+    },
+    cardActive: { borderColor: `${p.amber}55` },
+    cardDone: { borderColor: `${p.safe}44` },
+    header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    iconWrap: {
+      width: 38, height: 38, borderRadius: 12, borderWidth: 1,
+      backgroundColor: `${p.primary}1A`, alignItems: 'center', justifyContent: 'center',
+    },
+    name: { color: p.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+    statusRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
+    statusDot: { width: 7, height: 7, borderRadius: 3.5 },
+    statusText: { fontSize: 11, fontWeight: '600', fontFamily: 'Inter_500Medium' },
+    confNum: { color: p.safe, fontSize: 15, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+    body: { marginTop: 12 },
+    evidence: { color: p.textMuted, fontSize: 12.5, lineHeight: 18, fontFamily: 'Inter_400Regular' },
+    decisionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 8 },
+    decision: { flex: 1, color: p.text, fontSize: 13, fontWeight: '600', lineHeight: 18, fontFamily: 'Inter_500Medium' },
+    barTrack: { height: 4, borderRadius: 2, backgroundColor: p.glassStrong, marginTop: 12, overflow: 'hidden' },
+    barFill: { height: 4, borderRadius: 2, backgroundColor: p.safe },
+  });
+}

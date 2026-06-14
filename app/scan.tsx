@@ -8,11 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { palette, bgGradient } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { workTypes } from '@/constants/workTypes';
 import { WorkTypePill } from '@/components/WorkTypePill';
 import { WeatherEvidenceCard } from '@/components/WeatherEvidenceCard';
+import { Palette } from '@/constants/colors';
 
 const WEB = Platform.OS === 'web';
 function hapticSuccess() { if (!WEB) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }
@@ -23,6 +24,9 @@ export default function ScanScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { setPhoto, setWorkTypeId, workTypeId, photo, weather } = useApp();
+  const { palette, bgGradient } = useTheme();
+  const styles = makeStyles(palette);
+
   const [localPhoto, setLocalPhoto] = useState<string | null>(photo);
   const [demoSite, setDemoSite] = useState(false);
   const [localWorkType, setLocalWorkType] = useState<string | null>(workTypeId);
@@ -51,12 +55,7 @@ export default function ScanScreen() {
     if (!res.canceled && res.assets[0]) { setLocalPhoto(res.assets[0].uri); setDemoSite(false); hapticSuccess(); }
   }
 
-  function useDemoSite() {
-    setDemoSite(true);
-    setLocalPhoto(null);
-    hapticSuccess();
-  }
-
+  function useDemoSite() { setDemoSite(true); setLocalPhoto(null); hapticSuccess(); }
   function selectWorkType(id: string) { setLocalWorkType(id); hapticSelect(); }
 
   function runAnalysis() {
@@ -71,7 +70,6 @@ export default function ScanScreen() {
     <View style={styles.container}>
       <LinearGradient colors={bgGradient as any} style={StyleSheet.absoluteFill} />
 
-      {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 6 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
           <Ionicons name="arrow-back" size={20} color={palette.text} />
@@ -85,7 +83,6 @@ export default function ScanScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 110 }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Scan frame */}
         <Text style={styles.step}>STEP 1 · CAPTURE WORKSITE</Text>
         <View style={styles.scanFrame}>
           {localPhoto ? (
@@ -102,7 +99,6 @@ export default function ScanScreen() {
               <Text style={styles.emptyText}>Point at the worksite or upload a photo</Text>
             </View>
           )}
-          {/* AR corner brackets */}
           <View style={[styles.corner, styles.cTL]} />
           <View style={[styles.corner, styles.cTR]} />
           <View style={[styles.corner, styles.cBL]} />
@@ -114,7 +110,6 @@ export default function ScanScreen() {
           )}
         </View>
 
-        {/* Capture buttons */}
         <View style={styles.captureRow}>
           <TouchableOpacity style={styles.captureBtn} onPress={pickFromCamera} activeOpacity={0.85}>
             <Ionicons name="camera" size={18} color={palette.primary} />
@@ -130,7 +125,6 @@ export default function ScanScreen() {
           <Text style={[styles.demoBtnText, demoSite && styles.demoBtnTextActive]}>Use Demo Site</Text>
         </TouchableOpacity>
 
-        {/* Work type */}
         <Text style={[styles.step, { marginTop: 26 }]}>STEP 2 · WORK TYPE</Text>
         <View style={styles.grid}>
           {workTypes.map((wt) => (
@@ -138,12 +132,10 @@ export default function ScanScreen() {
           ))}
         </View>
 
-        {/* Weather */}
         <Text style={[styles.step, { marginTop: 26 }]}>STEP 3 · SITE CONDITIONS</Text>
         <WeatherEvidenceCard weather={weather} />
       </ScrollView>
 
-      {/* Sticky CTA */}
       <View style={[styles.footer, { paddingBottom: bottomPad + 14 }]}>
         <TouchableOpacity onPress={runAnalysis} disabled={!canAnalyze} activeOpacity={0.9} style={[styles.ctaWrap, !canAnalyze && { opacity: 0.45 }]}>
           <LinearGradient colors={[palette.amber, palette.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.cta}>
@@ -157,60 +149,62 @@ export default function ScanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
-  iconBtn: {
-    width: 38, height: 38, borderRadius: 12, backgroundColor: palette.glass,
-    borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center',
-  },
-  headerTitle: { color: palette.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
-  content: { paddingHorizontal: 20, paddingTop: 6 },
-  step: { color: palette.textFaint, fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginBottom: 12, fontFamily: 'Inter_600SemiBold' },
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: p.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+    iconBtn: {
+      width: 38, height: 38, borderRadius: 12, backgroundColor: p.glass,
+      borderWidth: 1, borderColor: p.border, alignItems: 'center', justifyContent: 'center',
+    },
+    headerTitle: { color: p.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+    content: { paddingHorizontal: 20, paddingTop: 6 },
+    step: { color: p.textFaint, fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginBottom: 12, fontFamily: 'Inter_600SemiBold' },
 
-  scanFrame: {
-    height: 210, borderRadius: 22, overflow: 'hidden', position: 'relative',
-    backgroundColor: palette.bgRaised, borderWidth: 1, borderColor: palette.border,
-  },
-  preview: { width: '100%', height: '100%' },
-  demoFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  demoLabel: { color: palette.text, fontSize: 16, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  demoSub: { color: palette.textMuted, fontSize: 12, fontFamily: 'Inter_400Regular' },
-  emptyFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 30 },
-  emptyText: { color: palette.textFaint, fontSize: 13, textAlign: 'center', fontFamily: 'Inter_400Regular' },
-  corner: { position: 'absolute', width: 24, height: 24, borderColor: palette.primary },
-  cTL: { top: 12, left: 12, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
-  cTR: { top: 12, right: 12, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
-  cBL: { bottom: 12, left: 12, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 8 },
-  cBR: { bottom: 12, right: 12, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
-  clearBtn: {
-    position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
-  },
+    scanFrame: {
+      height: 210, borderRadius: 22, overflow: 'hidden', position: 'relative',
+      backgroundColor: p.bgRaised, borderWidth: 1, borderColor: p.border,
+    },
+    preview: { width: '100%', height: '100%' },
+    demoFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6 },
+    demoLabel: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+    demoSub: { color: 'rgba(255,255,255,0.65)', fontSize: 12, fontFamily: 'Inter_400Regular' },
+    emptyFill: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 30 },
+    emptyText: { color: p.textFaint, fontSize: 13, textAlign: 'center', fontFamily: 'Inter_400Regular' },
+    corner: { position: 'absolute', width: 24, height: 24, borderColor: p.primary },
+    cTL: { top: 12, left: 12, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 8 },
+    cTR: { top: 12, right: 12, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 8 },
+    cBL: { bottom: 12, left: 12, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 8 },
+    cBR: { bottom: 12, right: 12, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
+    clearBtn: {
+      position: 'absolute', top: 12, right: 12, width: 30, height: 30, borderRadius: 15,
+      backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
+    },
 
-  captureRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  captureBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: palette.glass, borderWidth: 1, borderColor: palette.border, borderRadius: 14, paddingVertical: 13,
-  },
-  captureText: { color: palette.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-  demoBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10,
-    borderWidth: 1, borderColor: `${palette.amber}55`, backgroundColor: 'rgba(255,176,32,0.08)', borderRadius: 14, paddingVertical: 13,
-  },
-  demoBtnActive: { backgroundColor: palette.amber, borderColor: palette.amber },
-  demoBtnText: { color: palette.amber, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
-  demoBtnTextActive: { color: '#0A0A0A' },
+    captureRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+    captureBtn: {
+      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+      backgroundColor: p.glass, borderWidth: 1, borderColor: p.border, borderRadius: 14, paddingVertical: 13,
+    },
+    captureText: { color: p.text, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+    demoBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10,
+      borderWidth: 1, borderColor: `${p.amber}55`, backgroundColor: `${p.amber}14`, borderRadius: 14, paddingVertical: 13,
+    },
+    demoBtnActive: { backgroundColor: p.amber, borderColor: p.amber },
+    demoBtnText: { color: p.amber, fontSize: 14, fontWeight: '700', fontFamily: 'Inter_600SemiBold' },
+    demoBtnTextActive: { color: '#0A0A0A' },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
 
-  footer: {
-    position: Platform.OS === 'web' ? ('sticky' as any) : 'absolute',
-    left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12,
-    backgroundColor: 'rgba(7,7,7,0.92)', borderTopWidth: 1, borderTopColor: palette.border,
-  },
-  ctaWrap: { borderRadius: 18, overflow: 'hidden' },
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
-  ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
-  hint: { color: palette.textFaint, fontSize: 12, textAlign: 'center', marginTop: 8, fontFamily: 'Inter_400Regular' },
-});
+    footer: {
+      position: Platform.OS === 'web' ? ('sticky' as any) : 'absolute',
+      left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12,
+      backgroundColor: p.footerBg, borderTopWidth: 1, borderTopColor: p.border,
+    },
+    ctaWrap: { borderRadius: 18, overflow: 'hidden' },
+    cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
+    ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.2, fontFamily: 'Inter_700Bold' },
+    hint: { color: p.textFaint, fontSize: 12, textAlign: 'center', marginTop: 8, fontFamily: 'Inter_400Regular' },
+  });
+}

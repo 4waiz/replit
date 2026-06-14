@@ -3,9 +3,10 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { palette, bgGradient, riskColor } from '@/constants/colors';
 import { useApp } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { WorkerAlertCard } from '@/components/WorkerAlertCard';
+import { Palette } from '@/constants/colors';
 
 const WEB = Platform.OS === 'web';
 
@@ -13,6 +14,8 @@ export default function WorkerAlertScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { result } = useApp();
+  const { palette, bgGradient, riskColor } = useTheme();
+  const styles = makeStyles(palette);
 
   const topPad = WEB ? 52 : insets.top;
   const bottomPad = WEB ? 28 : insets.bottom;
@@ -41,7 +44,6 @@ export default function WorkerAlertScreen() {
       </View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomPad + 30 }]} showsVerticalScrollIndicator={false}>
-        {/* Banner */}
         <View style={[styles.banner, { borderColor: `${color}55`, backgroundColor: `${color}14` }]}>
           <Ionicons name="megaphone" size={22} color={color} />
           <View style={{ flex: 1 }}>
@@ -60,14 +62,16 @@ export default function WorkerAlertScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
-  iconBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: palette.glass, borderWidth: 1, borderColor: palette.border, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: palette.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
-  content: { paddingHorizontal: 20, paddingTop: 6 },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 18 },
-  bannerTitle: { fontSize: 16, fontWeight: '800', fontFamily: 'Inter_700Bold' },
-  bannerSub: { color: palette.textMuted, fontSize: 12.5, marginTop: 2, fontFamily: 'Inter_400Regular' },
-  note: { color: palette.textFaint, fontSize: 12, textAlign: 'center', marginTop: 8, fontFamily: 'Inter_400Regular' },
-});
+function makeStyles(p: Palette) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: p.bg, ...Platform.select({ web: { minHeight: '100vh' } as any, default: {} }) },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+    iconBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: p.glass, borderWidth: 1, borderColor: p.border, alignItems: 'center', justifyContent: 'center' },
+    headerTitle: { color: p.text, fontSize: 14, fontWeight: '800', letterSpacing: 2, fontFamily: 'Inter_700Bold' },
+    content: { paddingHorizontal: 20, paddingTop: 6 },
+    banner: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 18 },
+    bannerTitle: { fontSize: 16, fontWeight: '800', fontFamily: 'Inter_700Bold' },
+    bannerSub: { color: p.textMuted, fontSize: 12.5, marginTop: 2, fontFamily: 'Inter_400Regular' },
+    note: { color: p.textFaint, fontSize: 12, textAlign: 'center', marginTop: 8, fontFamily: 'Inter_400Regular' },
+  });
+}
