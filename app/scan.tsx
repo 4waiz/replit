@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform, Alert,
 } from 'react-native';
@@ -30,6 +30,7 @@ export default function ScanScreen() {
   const [localPhoto, setLocalPhoto] = useState<string | null>(photo);
   const [demoSite, setDemoSite] = useState(false);
   const [localWorkType, setLocalWorkType] = useState<string | null>(workTypeId);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const topPad = WEB ? 52 : insets.top;
   const bottomPad = WEB ? 28 : insets.bottom;
@@ -53,6 +54,13 @@ export default function ScanScreen() {
 
   async function pickFromCamera() {
     if (WEB) {
+      // Prefer a live in-app camera stream; fall back to the OS file/camera picker
+      // (e.g. desktop without a webcam, or denied/unsupported getUserMedia).
+      const md = (globalThis as any).navigator?.mediaDevices;
+      if (md?.getUserMedia) {
+        setCameraOpen(true);
+        return;
+      }
       const uri = await webFileInput('environment');
       if (uri) { setLocalPhoto(uri); setDemoSite(false); }
       return;
@@ -79,6 +87,13 @@ export default function ScanScreen() {
     }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [4, 3] });
     if (!res.canceled && res.assets[0]) { setLocalPhoto(res.assets[0].uri); setDemoSite(false); hapticSuccess(); }
+  }
+
+  function onCaptured(uri: string) {
+    setLocalPhoto(uri);
+    setDemoSite(false);
+    setCameraOpen(false);
+    hapticSuccess();
   }
 
   function useDemoSite() { setDemoSite(true); setLocalPhoto(null); hapticSuccess(); }
@@ -171,9 +186,127 @@ export default function ScanScreen() {
         </TouchableOpacity>
         {!canAnalyze && <Text style={styles.hint}>Add a photo (or demo site) and pick a work type</Text>}
       </View>
+
+      {cameraOpen && WEB && (
+        <LiveCamera
+          palette={palette}
+          onCapture={onCaptured}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
     </View>
   );
 }
+
+function LiveCamera({
+  palette,
+  onCapture,
+  onClose,
+}: {
+  palette: Palette;
+  onCapture: (uri: string) => void;
+  onClose: () => void;
+}) {
+  const videoRef = useRef<any>(null);
+  const streamRef = useRef<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const nav: any = (globalThis as any).navigator;
+    nav?.mediaDevices
+      ?.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      .then((stream: any) => {
+        if (cancelled) { stream.getTracks().forEach((t: any) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play?.();
+        }
+      })
+      .catch(() => { if (!cancelled) setError('Camera unavailable. Check browser permissions.'); });
+
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks?.().forEach((t: any) => t.stop());
+    };
+  }, []);
+
+  function capture() {
+    const video = videoRef.current;
+    if (!video) return;
+    const doc: any = (globalThis as any).document;
+    const w = video.videoWidth || 1280;
+    const h = video.videoHeight || 960;
+    const canvas = doc.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, w, h);
+    onCapture(canvas.toDataURL('image/jpeg', 0.85));
+  }
+
+  // Render the live preview via a raw <video> element on web.
+  const Video: any = 'video';
+
+  return (
+    <View style={styles_camOverlay}>
+      {error ? (
+        <View style={styles_camCenter}>
+          <Ionicons name="alert-circle-outline" size={40} color="#fff" />
+          <Text style={styles_camError}>{error}</Text>
+          <TouchableOpacity style={styles_camFallbackBtn} onPress={onClose}>
+            <Text style={styles_camFallbackText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      )}
+
+      <TouchableOpacity style={styles_camClose} onPress={onClose}>
+        <Ionicons name="close" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {!error && (
+        <View style={styles_camControls}>
+          <TouchableOpacity style={styles_camShutterRing} onPress={capture} activeOpacity={0.8}>
+            <View style={[styles_camShutterCore, { backgroundColor: palette.primary }]} />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles_camOverlay: any = {
+  position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+  backgroundColor: '#000', zIndex: 999,
+  alignItems: 'center', justifyContent: 'center',
+};
+const styles_camCenter: any = { alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 30 };
+const styles_camError: any = { color: '#fff', fontSize: 14, textAlign: 'center' };
+const styles_camFallbackBtn: any = {
+  marginTop: 8, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 14,
+  borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
+};
+const styles_camFallbackText: any = { color: '#fff', fontSize: 14, fontWeight: '700' };
+const styles_camClose: any = {
+  position: 'absolute', top: 24, right: 20, width: 44, height: 44, borderRadius: 22,
+  backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center',
+};
+const styles_camControls: any = { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center' };
+const styles_camShutterRing: any = {
+  width: 76, height: 76, borderRadius: 38, borderWidth: 4, borderColor: '#fff',
+  alignItems: 'center', justifyContent: 'center',
+};
+const styles_camShutterCore: any = { width: 58, height: 58, borderRadius: 29 };
 
 function makeStyles(p: Palette) {
   return StyleSheet.create({
