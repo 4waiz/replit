@@ -1,13 +1,18 @@
 /** @type {import('next').NextConfig} */
+
+// Replit serves the app through a proxied iframe on a per-repl domain.
+// Allow that origin so cross-origin HMR / asset requests are not blocked in dev.
+const replitDomains = (process.env.REPLIT_DOMAINS ?? "")
+  .split(",")
+  .map((d) => d.trim())
+  .filter(Boolean);
+
 const nextConfig = {
-  // Replit serves the app through a proxied iframe. Allow the dev origin so
-  // cross-origin HMR / asset requests are not blocked in development.
   allowedDevOrigins: [
-    "*.replit.dev",
-    "*.repl.co",
-    "*.replit.app",
-    "*.worf.replit.dev",
-    "*.picard.replit.dev",
+    ...replitDomains,
+    ".replit.dev",
+    ".repl.co",
+    ".replit.app",
   ],
 };
 
