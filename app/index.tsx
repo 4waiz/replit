@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Platform, TouchableOpacity, Animated, Easing, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, Animated, Easing, ActivityIndicator, Image, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -133,6 +133,10 @@ export default function WakeScreen() {
             </LinearGradient>
           </TouchableOpacity>
           <Text style={styles.hint}>One scan → real risk intelligence → action plan</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://starkzai.com')} activeOpacity={0.7} style={styles.websiteLink}>
+            <Text style={styles.websiteLinkText}>View Our Website</Text>
+            <Ionicons name="open-outline" size={11} color="rgba(255,255,255,0.35)" />
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -234,5 +238,7 @@ function makeStyles(p: Palette) {
     cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 15 },
     ctaText: { color: '#0A0A0A', fontSize: 15, fontWeight: '900', letterSpacing: 1.4, fontFamily: 'Inter_700Bold' },
     hint: { color: p.textFaint, fontSize: 11, textAlign: 'center', fontFamily: 'Inter_400Regular' },
+    websiteLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 6 },
+    websiteLinkText: { color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'Inter_400Regular', textDecorationLine: 'underline' },
   });
 }
