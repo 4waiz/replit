@@ -4,12 +4,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Starkz AI — Heat Safety Agent",
   description:
-    "AI safety agent for outdoor workers in extreme heat. Upload a worksite photo, pick a work type, and get a heat & fatigue risk plan.",
+    "AI safety agent for outdoor workers in extreme heat. One phone scan → instant heat & fatigue risk plan and multilingual worker alert.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   themeColor: "#f97316",
 };
 

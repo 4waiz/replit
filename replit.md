@@ -2,7 +2,7 @@
 
 AI safety agent for outdoor workers in extreme heat. A supervisor uploads or takes one worksite photo, selects the work type, and receives a heat/fatigue risk dashboard, task adjustment plan, break schedule, and a multilingual worker safety message.
 
-This repository currently contains the **foundation scaffold** only — a clean, working UI shell driven entirely by mock data. There is no real AI, backend, or image processing yet.
+This is a polished, demo-ready **mobile-first** prototype driven entirely by deterministic mock data. There is no real AI, backend, or image processing yet — see `README.md` for the full pitch and demo flow.
 
 ## Tech stack
 
@@ -14,17 +14,28 @@ This repository currently contains the **foundation scaffold** only — a clean,
 
 ```
 app/
-  layout.tsx        # Root layout, metadata, fonts, global background
-  page.tsx          # Home page — composes all sections
-  globals.css       # Tailwind layers + glassmorphism utility classes
+  layout.tsx           # Root layout, metadata, warm gradient background
+  page.tsx             # Home — PhoneShell + StarkzApp
+  video/page.tsx       # /video — PhoneShell + PromoVideo (cinematic promo)
+  globals.css          # Tailwind layers + glassmorphism / pill utilities
 components/
-  ui/               # Reusable building blocks (Button, GlassCard, Section)
-  sections/         # Page sections (Hero, WorksiteUpload, WorkTypeSelector,
-                    #   AnalyzeButton, ResultDashboard, AgentCards)
+  StarkzApp.tsx        # Mobile flow state machine: home → scan → loading → result
+  PromoVideo.tsx       # Auto-playing 6-scene promo (full + fast demo modes)
+  RobotMascot.tsx      # Floating, glowing robot mascot
+  ScanCard.tsx         # Scanner-style upload + "Use Demo Site"
+  WorkTypePills.tsx    # Tappable work-type pills
+  LoadingAnalysis.tsx  # Cinematic ~3s agentic loading sequence
+  ResultDashboard.tsx  # The mobile risk dashboard (wow moment)
+  RiskGauge.tsx        # Large circular SVG risk gauge
+  MetricCard.tsx       # Glass metric tile with gradient bar
+  AgentCard.tsx        # Agent row (idle / working / done states)
+  MultilingualAlert.tsx# EN / AR / HI / UR worker alert
+  SafetyReport.tsx     # Shareable, screenshot-worthy report card
+  ui/                  # PhoneShell, Button
 lib/
-  mockData.ts       # All placeholder data (work types, metrics, agents, etc.)
+  mockData.ts          # Deterministic mock intelligence + getAnalysis()
 public/
-  robot-mascot.png  # Hero mascot placeholder
+  robot-mascot.png     # Robot mascot
 ```
 
 ## Running locally / in Replit

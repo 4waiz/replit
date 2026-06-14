@@ -2,7 +2,7 @@ import { ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonProps = {
   children: ReactNode;
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "ghost" | "glow";
 } & ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function Button({
@@ -12,14 +12,17 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const base =
-    "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-60";
-  const styles =
-    variant === "primary"
-      ? "bg-brand-500 text-white shadow-glass hover:bg-brand-600"
-      : "border border-brand-300/70 bg-white/50 text-brand-700 backdrop-blur hover:bg-white/70";
+    "inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-semibold transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50";
+
+  const styles: Record<NonNullable<ButtonProps["variant"]>, string> = {
+    primary: "bg-brand-500 text-white shadow-glass hover:bg-brand-600",
+    glow: "bg-gradient-to-r from-brand-500 to-orange-500 text-white shadow-glow-lg hover:from-brand-600 hover:to-orange-600",
+    ghost:
+      "border border-brand-300/70 bg-white/50 text-brand-700 backdrop-blur hover:bg-white/70",
+  };
 
   return (
-    <button className={`${base} ${styles} ${className}`} {...props}>
+    <button className={`${base} ${styles[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
