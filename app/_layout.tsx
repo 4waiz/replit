@@ -25,8 +25,32 @@ const queryClient = new QueryClient();
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.textContent = `
-    html, body, #root { height: 100%; margin: 0; background-color: #070707; }
-    #root { display: flex; flex-direction: column; }
+    html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #0f0704;
+    }
+    body {
+      height: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #0f0704;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    #root {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      box-shadow: 0 0 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,122,26,0.08);
+    }
   `;
   document.head.appendChild(style);
 }
