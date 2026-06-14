@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { Agent } from '@/lib/mockData';
@@ -29,8 +29,8 @@ export function AgentCard({ agent, state }: AgentCardProps) {
     'ellipse-outline';
 
   return (
-    <View style={[styles.row, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}>
-      <View style={[styles.iconWrap, { backgroundColor: colors.muted }]}>
+    <View style={[styles.row, styles.glass, { borderColor: colors.cardBorder, backgroundColor: colors.card }]}>
+      <View style={styles.iconWrap}>
         <Ionicons
           name={agent.iconName as any}
           size={20}
@@ -55,16 +55,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 16,
     borderWidth: 1,
-    padding: 12,
+    padding: 13,
     gap: 12,
-    marginBottom: 8,
+    marginBottom: 10,
   },
+  glass: Platform.select({
+    web: { backdropFilter: 'blur(14px)' } as any,
+    default: {},
+  }),
   iconWrap: {
     width: 40,
     height: 40,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(249,115,22,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(249,115,22,0.28)',
   },
   info: {
     flex: 1,

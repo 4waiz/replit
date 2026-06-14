@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,12 +40,10 @@ export default function HomeScreen() {
       <View style={[styles.blob, styles.blobTopRight]} />
       <View style={[styles.blob, styles.blobBottomLeft]} />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingTop: topPad + 20, paddingBottom: bottomPad + 24 }]}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={[styles.content, { paddingTop: topPad + 14, paddingBottom: bottomPad + 18 }]}
       >
-        {/* Status pill */}
+        {/* Header: status pill */}
         <View style={styles.statusRow}>
           <View style={styles.statusPill}>
             <View style={styles.greenDot} />
@@ -53,21 +51,22 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Mascot */}
-        <View style={styles.mascotWrap}>
-          <View style={styles.glowRing} />
-          <Image
-            source={require('../assets/images/robot.png')}
-            style={styles.mascot}
-            resizeMode="contain"
-          />
-        </View>
+        {/* Hero: mascot + title */}
+        <View style={styles.hero}>
+          <View style={styles.mascotWrap}>
+            <View style={styles.glowRing} />
+            <Image
+              source={require('../assets/images/robot.png')}
+              style={styles.mascot}
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* Title */}
-        <Text style={styles.title}>STARKZ AI</Text>
-        <Text style={styles.subtitle}>
-          AI safety agent for outdoor crews{'\n'}in extreme heat
-        </Text>
+          <Text style={styles.title}>STARKZ AI</Text>
+          <Text style={styles.subtitle}>
+            AI safety agent for outdoor crews{'\n'}in extreme heat
+          </Text>
+        </View>
 
         {/* Agents section */}
         <View style={styles.agentsWrap}>
@@ -84,27 +83,35 @@ export default function HomeScreen() {
           style={styles.ctaWrap}
         >
           <LinearGradient
-            colors={['#f97316', '#ea580c']}
+            colors={['#fb923c', '#ea580c']}
             style={styles.cta}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
           >
             <Ionicons name="camera" size={22} color="#fff" />
             <Text style={styles.ctaText}>SCAN WORKSITE</Text>
-            <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.7)" />
+            <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.85)" />
           </LinearGradient>
         </TouchableOpacity>
-
-        <Text style={styles.footer}>Demo mode · Simulated AI analysis</Text>
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flex: 1 },
-  content: { paddingHorizontal: 24 },
+  container: {
+    flex: 1,
+    backgroundColor: '#1c0800',
+    ...Platform.select({
+      web: { minHeight: '100vh' } as any,
+      default: {},
+    }),
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 22,
+    justifyContent: 'space-between',
+  },
 
   blob: {
     position: 'absolute',
@@ -124,51 +131,62 @@ const styles = StyleSheet.create({
     backgroundColor: '#fb923c',
   },
 
-  statusRow: { alignItems: 'center', marginBottom: 24 },
+  statusRow: { alignItems: 'center' },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    gap: 7,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    borderColor: 'rgba(255,255,255,0.16)',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     borderRadius: 100,
   },
   greenDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
-    backgroundColor: '#22c55e',
+    backgroundColor: '#34d399',
+    ...Platform.select({
+      web: { boxShadow: '0 0 6px rgba(52,211,153,0.9)' } as any,
+      default: {
+        shadowColor: '#34d399',
+        shadowOpacity: 0.9,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 0 },
+      },
+    }),
   },
   statusText: {
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.92)',
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.4,
+    fontFamily: 'Inter_600SemiBold',
   },
 
+  hero: { alignItems: 'center' },
   mascotWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 28,
-    height: 200,
+    height: 150,
+    marginBottom: 6,
   },
   glowRing: {
     position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(249,115,22,0.28)',
+    width: 158,
+    height: 158,
+    borderRadius: 79,
+    backgroundColor: 'rgba(249,115,22,0.22)',
   },
   mascot: {
-    width: 160,
-    height: 180,
+    width: 132,
+    height: 150,
   },
 
   title: {
-    fontSize: 38,
+    fontSize: 36,
     fontWeight: '900',
     color: '#fff',
     textAlign: 'center',
@@ -176,26 +194,38 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
   },
   subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,237,213,0.75)',
+    fontSize: 14,
+    color: 'rgba(255,237,213,0.72)',
     textAlign: 'center',
-    marginTop: 10,
-    lineHeight: 22,
+    marginTop: 8,
+    lineHeight: 21,
     fontFamily: 'Inter_400Regular',
-    marginBottom: 36,
   },
 
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: 'rgba(253,186,116,0.8)',
-    letterSpacing: 1.5,
+    color: 'rgba(253,186,116,0.85)',
+    letterSpacing: 1.6,
     marginBottom: 12,
+    textAlign: 'center',
     fontFamily: 'Inter_600SemiBold',
   },
-  agentsWrap: { marginBottom: 32 },
+  agentsWrap: {},
 
-  ctaWrap: { borderRadius: 20, overflow: 'hidden', marginBottom: 20 },
+  ctaWrap: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: { boxShadow: '0 10px 24px rgba(249,115,22,0.45)' } as any,
+      default: {
+        shadowColor: '#f97316',
+        shadowOpacity: 0.45,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 10 },
+      },
+    }),
+  },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -203,6 +233,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 18,
     paddingHorizontal: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 20,
   },
   ctaText: {
     color: '#fff',
@@ -212,12 +245,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_700Bold',
     flex: 1,
     textAlign: 'center',
-  },
-
-  footer: {
-    textAlign: 'center',
-    color: 'rgba(255,237,213,0.45)',
-    fontSize: 12,
-    fontFamily: 'Inter_400Regular',
   },
 });

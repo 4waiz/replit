@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -19,6 +20,17 @@ import { AppProvider } from '@/context/AppContext';
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+// Web: make html/body/root fill the viewport with the app's dark background
+// so no white space shows below the content.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    html, body, #root { height: 100%; margin: 0; background-color: #1c0800; }
+    #root { display: flex; flex-direction: column; }
+  `;
+  document.head.appendChild(style);
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
